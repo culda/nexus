@@ -1,0 +1,12 @@
+[package]
+name = "nexus"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ethers = "1.0.2"
+web3 = "0.18.0"
+clap = "2.33.3"
+tokio = { version = "1.15.0", features = ["full"] }
+zksync = { git = "https://github.com/matter-labs/zksync", version = "0.3.0" }
+zksync_eth_signer = { git = "https://github.com/matter-labs/zksync", version = "1.0.0" }
