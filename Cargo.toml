@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ethers = "1.0.2"
+ethers = "2.0.4"
+dotenv = "0.15.0"
+dotenv_codegen = "0.15.0"
+ethers-signers = "2.0.0"
 web3 = "0.18.0"
 clap = "2.33.3"
 tokio = { version = "1.15.0", features = ["full"] }
-zksync = { git = "https://github.com/matter-labs/zksync", version = "0.3.0" }
-zksync_eth_signer = { git = "https://github.com/matter-labs/zksync", version = "1.0.0" }

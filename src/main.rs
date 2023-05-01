@@ -1,62 +1,80 @@
-use std::sync::Arc;
+#[macro_use]
+extern crate dotenv_codegen;
 
 use clap::{App, Arg};
+
 use nexus::syncswap;
-use web3::{
-    transports::Http,
-    types::{H160, H256},
-    Web3,
-};
-use zksync::{Network, Wallet as ZkWallet, WalletCredentials};
-use zksync_eth_signer::{EthereumSigner, PrivateKeySigner};
 
 use ethers::{
-    prelude::k256::ecdsa::SigningKey,
-    providers::{Middleware, Provider, ProviderExt},
-    signers::{coins_bip39::English, MnemonicBuilder, Signer},
+    middleware::SignerMiddleware,
+    prelude::{coins_bip39::English, MnemonicBuilder, TransactionRequest},
+    providers::{Http, Middleware, Provider, ProviderExt},
+    types::{transaction::eip2718::TypedTransaction, Chain, H160},
 };
+use ethers_signers::Signer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let phrase = ""; // <-- phrase here
+    let phrase = dotenv!("MNEMONIC");
+    let matches = App::new("Nexus")
+        // .arg(
+        //     Arg::with_name("dapp")
+        //         .required(true)
+        //         .takes_value(true)
+        //         .possible_values(&["syncswap"])
+        //         .help("The name of the dapp to execute"),
+        // )
+        .arg(
+            Arg::with_name("test")
+                .short("t")
+                .long("test")
+                .help("Enables test mode"),
+        )
+        .get_matches();
+
+    let test_mode = matches.is_present("test");
+
+    let zk_rpc = if test_mode {
+        "https://testnet.era.zksync.dev"
+    } else {
+        "https://mainnet.era.zksync.io"
+    };
 
     // let mut wallets = Vec::new();
 
-    for i in 0..10 {
-        let builder = MnemonicBuilder::<English>::default()
-            .phrase(phrase)
-            .derivation_path(format!("m/44'/60'/0'/0/{}", i).as_str())
-            .unwrap();
+    // for i in 0..10 {
+    let builder = MnemonicBuilder::<English>::default()
+        .phrase(phrase)
+        .derivation_path(format!("m/44'/60'/0'/0/{}", 0).as_str())
+        .unwrap();
 
-        let wallet = builder.build().unwrap();
-        let provider = Provider::connect("https://testnet.era.zksync.dev").await;
+    let wallet = builder.build().unwrap().with_chain_id(324u64);
+    let mut provider = Provider::connect(zk_rpc).await;
+    provider.set_chain(Chain::ZkSync);
+    let client = SignerMiddleware::new(provider.clone(), wallet.clone());
 
-        let balance = provider.get_balance(wallet.address(), None).await.unwrap();
-        println!("Balance: {}", balance);
+    println!("chain id: {}", client.get_chainid().await?);
+    println!("wallet chain {}", wallet.chain_id());
 
-        // let prv_key: H256 = H256::from_slice(&wallet.signer().to_bytes());
+    let address: H160 = wallet.address();
 
-        // let signer = PrivateKeySigner::new(prv_key);
+    let tx = TransactionRequest::new()
+        .to("0xBc63552E466B4fd2B6fbC5a3D1f3bD556c45FD7a")
+        .chain_id(324u64)
+        .from(address)
+        .value(1_000_000u128);
 
-        // let address_bytes: [u8; 20] = wallet.address().to_fixed_bytes();
-        // let address: H160 = H160::from_slice(&address_bytes);
+    let typed = TypedTransaction::Legacy(tx);
 
-        // let creds = WalletCredentials::from_eth_signer(address, signer, Network::Mainnet);
+    // let signature = client.sign_transaction(&typed, address).await?;
 
-        // let wallet = ZkWallet::new(provider, creds).await;
+    let c = client.get_chainid().await?;
+    println!("Chain ID: {}", c);
 
-        // wallets.push(wallet);
-    }
+    let balance = provider.get_balance(wallet.address(), None).await.unwrap();
+    println!("Balance: {}", balance);
 
-    // let matches = App::new("Nexus")
-    //     .arg(
-    //         Arg::with_name("dapp")
-    //             .required(true)
-    //             .takes_value(true)
-    //             .possible_values(&["syncswap"])
-    //             .help("The name of the dapp to execute"),
-    //     )
-    //     .get_matches();
+    // client.send_transaction(typed, None).await?;
 
     // let transport = Http::new("http://localhost:8545")?;
     // let web3 = Web3::new(transport);
