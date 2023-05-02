@@ -8,6 +8,6 @@ ethers = "2.0.4"
 dotenv = "0.15.0"
 dotenv_codegen = "0.15.0"
 ethers-signers = "2.0.0"
-web3 = "0.18.0"
 clap = "2.33.3"
+anyhow = "1.0.44"
 tokio = { version = "1.15.0", features = ["full"] }

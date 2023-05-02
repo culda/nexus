@@ -3,13 +3,14 @@ extern crate dotenv_codegen;
 
 use clap::{App, Arg};
 
-use nexus::syncswap;
+use nexus::syncswap::swap_eth_for_usdc;
 
 use ethers::{
     middleware::SignerMiddleware,
     prelude::{coins_bip39::English, MnemonicBuilder, TransactionRequest},
     providers::{Http, Middleware, Provider, ProviderExt},
     types::{transaction::eip2718::TypedTransaction, Chain, H160},
+    utils::{parse_ether, parse_units},
 };
 use ethers_signers::Signer;
 
@@ -24,15 +25,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         //         .possible_values(&["syncswap"])
         //         .help("The name of the dapp to execute"),
         // )
-        .arg(
-            Arg::with_name("test")
-                .short("t")
-                .long("test")
-                .help("Enables test mode"),
-        )
+        // .arg(
+        //     Arg::with_name("test")
+        //         .short("t")
+        //         .long("test")
+        //         .help("Enables test mode"),
+        // )
         .get_matches();
 
-    let test_mode = matches.is_present("test");
+    let test_mode = false; // matches.is_present("test");
 
     let zk_rpc = if test_mode {
         "https://testnet.era.zksync.dev"
@@ -48,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .derivation_path(format!("m/44'/60'/0'/0/{}", 0).as_str())
         .unwrap();
 
-    let wallet = builder.build().unwrap().with_chain_id(324u64);
+    let wallet = builder.build().unwrap().with_chain_id(Chain::ZkSync);
     let mut provider = Provider::connect(zk_rpc).await;
     provider.set_chain(Chain::ZkSync);
     let client = SignerMiddleware::new(provider.clone(), wallet.clone());
@@ -58,13 +59,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let address: H160 = wallet.address();
 
-    let tx = TransactionRequest::new()
-        .to("0xBc63552E466B4fd2B6fbC5a3D1f3bD556c45FD7a")
-        .chain_id(324u64)
-        .from(address)
-        .value(1_000_000u128);
+    // let tx = TransactionRequest::new()
+    //     .to("0xBc63552E466B4fd2B6fbC5a3D1f3bD556c45FD7a")
+    //     .chain_id(324u64)
+    //     .from(address)
+    //     .value(1_000_000u128);
 
-    let typed = TypedTransaction::Legacy(tx);
+    // let typed = TypedTransaction::Legacy(tx);
 
     // let signature = client.sign_transaction(&typed, address).await?;
 
@@ -73,6 +74,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let balance = provider.get_balance(wallet.address(), None).await.unwrap();
     println!("Balance: {}", balance);
+
+    let amount = parse_ether(0.01).unwrap();
+    let amount_out_min = parse_units(10, 6).unwrap();
+
+    println!("amount: {}", amount);
+
+    let tx = swap_eth_for_usdc(client, ethers::types::U256::from(0), amount).await?;
 
     // client.send_transaction(typed, None).await?;
 
