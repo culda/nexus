@@ -3,7 +3,7 @@ extern crate dotenv_codegen;
 
 use clap::{App, Arg};
 
-use nexus::syncswap::swap_eth_for_usdc;
+use nexus::{cmd::swap_weth_for_token_1inch, constants::USDC_ETH_ADDRESS};
 
 use ethers::{
     middleware::SignerMiddleware,
@@ -16,7 +16,6 @@ use ethers_signers::Signer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let phrase = dotenv!("MNEMONIC");
     let matches = App::new("Nexus")
         // .arg(
         //     Arg::with_name("dapp")
@@ -33,54 +32,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // )
         .get_matches();
 
-    let test_mode = false; // matches.is_present("test");
+    // let zk_rpc = if test_mode {
+    //     "https://testnet.era.zksync.dev"
+    // } else {
+    //     "https://mainnet.era.zksync.io"
+    // };
 
-    let zk_rpc = if test_mode {
-        "https://testnet.era.zksync.dev"
-    } else {
-        "https://mainnet.era.zksync.io"
-    };
+    let phrase = dotenv!("MNEMONIC");
+    let mainnet_rpc = dotenv!("ALCHEMY_MAINNET_RPC");
 
-    // let mut wallets = Vec::new();
-
-    // for i in 0..10 {
     let builder = MnemonicBuilder::<English>::default()
         .phrase(phrase)
         .derivation_path(format!("m/44'/60'/0'/0/{}", 0).as_str())
         .unwrap();
 
-    let wallet = builder.build().unwrap().with_chain_id(Chain::ZkSync);
-    let mut provider = Provider::connect(zk_rpc).await;
-    provider.set_chain(Chain::ZkSync);
+    let wallet = builder.build().unwrap().with_chain_id(Chain::Mainnet);
+    let mut provider = Provider::connect(mainnet_rpc).await;
+    provider.set_chain(Chain::Mainnet);
     let client = SignerMiddleware::new(provider.clone(), wallet.clone());
 
-    println!("chain id: {}", client.get_chainid().await?);
-    println!("wallet chain {}", wallet.chain_id());
-
-    let address: H160 = wallet.address();
-
-    // let tx = TransactionRequest::new()
-    //     .to("0xBc63552E466B4fd2B6fbC5a3D1f3bD556c45FD7a")
-    //     .chain_id(324u64)
-    //     .from(address)
-    //     .value(1_000_000u128);
-
-    // let typed = TypedTransaction::Legacy(tx);
-
-    // let signature = client.sign_transaction(&typed, address).await?;
-
     let c = client.get_chainid().await?;
-    println!("Chain ID: {}", c);
-
+    let address: H160 = client.address();
     let balance = provider.get_balance(wallet.address(), None).await.unwrap();
+
     println!("Balance: {}", balance);
+    println!("Chain ID: {}", c);
+    println!("Address: {}", address);
 
-    let amount = parse_ether(0.01).unwrap();
-    let amount_out_min = parse_units(10, 6).unwrap();
+    let swap = swap_weth_for_token_1inch(client, USDC_ETH_ADDRESS, "0.05");
+    swap.await;
 
-    println!("amount: {}", amount);
-
-    let tx = swap_eth_for_usdc(client, ethers::types::U256::from(0), amount).await?;
+    // let tx = swap_eth_for_usdc(client, ethers::types::U256::from(0), amount).await?;
 
     // client.send_transaction(typed, None).await?;
 
@@ -95,6 +77,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     }
     //     _ => println!("Unknown dapp"),
     // }
+
+    // let tx = TransactionRequest::new()
+    //     .to("0xBc63552E466B4fd2B6fbC5a3D1f3bD556c45FD7a")
+    //     .chain_id(324u64)
+    //     .from(address)
+    //     .value(1_000_000u128);
+
+    // let typed = TypedTransaction::Legacy(tx);
+
+    // let signature = client.sign_transaction(&typed, address).await?;
 
     Ok(())
 }

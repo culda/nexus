@@ -5,6 +5,10 @@ pub const ZKSYNC_TESTNET_RPC: &str = "https://testnet.era.zksync.dev";
 
 pub const SLIPPAGE_TOLERANCE: f64 = 0.05;
 
+pub const INCH_ROUTER_ETH_ADDRESS: &str = "0x1111111254eeb25477b68fb85ed929f73a960582";
+pub const INCH_EXECUTOR_ETH_ADDRESS: &str = "0x1136B25047E142Fa3018184793aEc68fBB173cE4";
+pub const INCH_NATIVE_ADDRESS: &str = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
 pub const USDC_ZK_ADDRESS: &str = "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4";
 pub const USDC_DECIMALS: u8 = 6;
 pub const USDC_ETH_ADDRESS: &str = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
