@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+inch_api = { path = "./inch-api" }
 ethers = "2.0.4"
 dotenv = "0.15.0"
 dotenv_codegen = "0.15.0"

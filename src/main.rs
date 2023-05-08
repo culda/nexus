@@ -1,11 +1,12 @@
 #[macro_use]
 extern crate dotenv_codegen;
 
-use clap::{App, Arg};
+use clap::App;
 
-use nexus::{cmd::swap_weth_for_token_1inch, constants::USDC_ETH_ADDRESS};
+use nexus::{cmd::buy_token_weth, constants::USDC_ETH_ADDRESS};
 
 use ethers::{
+    abi::Address,
     middleware::SignerMiddleware,
     prelude::{coins_bip39::English, MnemonicBuilder, TransactionRequest},
     providers::{Http, Middleware, Provider, ProviderExt},
@@ -52,14 +53,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = SignerMiddleware::new(provider.clone(), wallet.clone());
 
     let c = client.get_chainid().await?;
-    let address: H160 = client.address();
+    let address: Address = client.address();
     let balance = provider.get_balance(wallet.address(), None).await.unwrap();
+    let address_str = format!("{:#x}", address);
 
     println!("Balance: {}", balance);
     println!("Chain ID: {}", c);
-    println!("Address: {}", address);
+    println!("Address: {}", address_str);
 
-    let swap = swap_weth_for_token_1inch(client, USDC_ETH_ADDRESS, "0.05");
+    let amount = parse_ether("0.05").unwrap().to_string();
+
+    let swap = buy_token_weth(client, USDC_ETH_ADDRESS, amount.as_str());
     swap.await;
 
     // let tx = swap_eth_for_usdc(client, ethers::types::U256::from(0), amount).await?;

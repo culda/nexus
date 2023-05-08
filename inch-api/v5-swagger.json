@@ -189,7 +189,7 @@
             "required": false,
             "in": "query",
             "description": "",
-            "schema": {}
+            "schema": { "type": "number" }
           },
           {
             "name": "connectorTokens",
@@ -204,7 +204,7 @@
             "required": false,
             "in": "query",
             "description": "min: 0; max: 3; default: 2; !should be the same for quote and swap!",
-            "schema": {}
+            "schema": { "type": "number" }
           },
           {
             "name": "mainRouteParts",
@@ -225,7 +225,7 @@
             "required": false,
             "in": "query",
             "description": "default: fast from network",
-            "schema": {}
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -383,21 +383,21 @@
             "required": false,
             "in": "query",
             "description": "min: 0; max: 3; default: 2; !should be the same for quote and swap!",
-            "schema": {}
+            "schema": { "type": "number" }
           },
           {
             "name": "gasLimit",
             "required": false,
             "in": "query",
             "description": "",
-            "schema": {}
+            "schema": { "type": "string" }
           },
           {
             "name": "gasPrice",
             "required": false,
             "in": "query",
             "description": "default: fast from network",
-            "schema": {}
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -425,7 +425,7 @@
   "info": {
     "title": "1inch Aggregation protocol API",
     "description": "\n<h2>Ethereum Network</h2>\nUsing 1inch Aggregation protocol API, you can find the best route to exchange assets and make the exchange.\n<br><br>\nStep by step:\n1. Lookup addresses of tokens you want to swap, for example ‘0xxx’ , ‘0xxxx’ for DAI -> 1INCH\n2. Check for allowance of 1inch router contract to spend source asset (/approve/allowance)\n3. If necessary, give approval for 1inch router to spend source token (/approve/transaction)\n4. Monitor the best exchange route using (/quote)\n5. When you ready use to perform swap (/swap)\n\n",
-    "version": "5.0",
+    "version": "5.0.0",
     "contact": {}
   },
   "tags": [],
@@ -470,9 +470,11 @@
         "properties": {
           "symbol": { "type": "string" },
           "name": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
           "address": { "type": "string" },
           "decimals": { "type": "number" },
-          "logoURI": { "type": "string" }
+          "logoURI": { "type": "string" },
+          "wrappedNative": { "type": "boolean" }
         },
         "required": ["symbol", "name", "address", "decimals", "logoURI"]
       },
@@ -543,9 +545,15 @@
           "protocols": {
             "description": "Selected protocols in a path",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/PathViewDto" }
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/PathViewDto" }
+              }
+            }
           },
-          "estimatedGas": { "type": "number" }
+          "estimatedGas": { "type": "integer" }
         },
         "required": [
           "fromToken",
@@ -606,7 +614,7 @@
           "data": { "type": "string" },
           "value": { "type": "string" },
           "gasPrice": { "type": "string" },
-          "gas": { "type": "string" }
+          "gas": { "type": "integer" }
         },
         "required": ["from", "to", "data", "value", "gasPrice", "gas"]
       },
@@ -632,8 +640,15 @@
           "protocols": {
             "description": "Selected protocols in a path",
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/PathViewDto" }
+              }
+            }
           },
+
           "tx": {
             "description": "Transaction object",
             "allOf": [{ "$ref": "#/components/schemas/Tx" }]

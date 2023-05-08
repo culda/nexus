@@ -1,0 +1,18 @@
+[package]
+name = "inch_api"
+version = "5.0.0"
+authors = ["OpenAPI Generator team and contributors"]
+description = " <h2>Ethereum Network</h2> Using 1inch Aggregation protocol API, you can find the best route to exchange assets and make the exchange. <br><br> Step by step: 1. Lookup addresses of tokens you want to swap, for example ‘0xxx’ , ‘0xxxx’ for DAI -> 1INCH 2. Check for allowance of 1inch router contract to spend source asset (/approve/allowance) 3. If necessary, give approval for 1inch router to spend source token (/approve/transaction) 4. Monitor the best exchange route using (/quote) 5. When you ready use to perform swap (/swap)  "
+# Override this license by providing a License Object in the OpenAPI.
+license = "Unlicense"
+edition = "2018"
+
+[dependencies]
+serde = "^1.0"
+serde_derive = "^1.0"
+serde_json = "^1.0"
+url = "^2.2"
+uuid = { version = "^1.0", features = ["serde"] }
+[dependencies.reqwest]
+version = "^0.11"
+features = ["json", "multipart"]

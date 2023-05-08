@@ -10,20 +10,14 @@ use ethers_signers::Wallet;
 
 use crate::{
     constants::{INCH_NATIVE_ADDRESS, WETH_ETH_ADDRESS},
-    inch::swap,
+    inch::InchApi,
 };
 
-pub async fn swap_weth_for_token_1inch(
+pub async fn buy_token_weth(
     client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
     token: &str,
     amount: &str,
 ) {
-    swap(
-        client,
-        H160::from_str(WETH_ETH_ADDRESS).unwrap(),
-        H160::from_str(token).unwrap(),
-        parse_ether(amount).unwrap(),
-        false,
-    )
-    .await;
+    let api = InchApi::new(client);
+    api.swap(WETH_ETH_ADDRESS, token, amount).await;
 }
