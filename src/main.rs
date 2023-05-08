@@ -1,9 +1,10 @@
 #[macro_use]
 extern crate dotenv_codegen;
 
-use clap::App;
+use clap::{App, Arg};
 
-use nexus::{cmd::buy_token_weth, constants::USDC_ETH_ADDRESS};
+use nexus::{client::NexusClient, cmd::buy_token_wrapped, constants::USDC_ETH_ADDRESS};
+use std::str::FromStr;
 
 use ethers::{
     abi::Address,
@@ -14,83 +15,141 @@ use ethers::{
     utils::{parse_ether, parse_units},
 };
 use ethers_signers::Signer;
+use paris::{error, info, log};
+
+pub struct MyChain(Chain);
+
+impl FromStr for MyChain {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Mainnet" | "1" => Ok(MyChain(Chain::Mainnet)),
+            "Morden" | "2" => Ok(MyChain(Chain::Morden)),
+            "Ropsten" | "3" => Ok(MyChain(Chain::Ropsten)),
+            "Rinkeby" | "4" => Ok(MyChain(Chain::Rinkeby)),
+            _ => Err("Invalid chain name"),
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = App::new("Nexus")
-        // .arg(
-        //     Arg::with_name("dapp")
-        //         .required(true)
-        //         .takes_value(true)
-        //         .possible_values(&["syncswap"])
-        //         .help("The name of the dapp to execute"),
-        // )
-        // .arg(
-        //     Arg::with_name("test")
-        //         .short("t")
-        //         .long("test")
-        //         .help("Enables test mode"),
-        // )
+        .about("Defi like a boss")
+        .subcommand(
+            App::new("buy")
+                .about("Buy a token")
+                .arg(
+                    Arg::with_name("token")
+                        .short("t")
+                        .long("token")
+                        .value_name("TOKEN")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("chain")
+                        .short("c")
+                        .long("chain")
+                        .value_name("mainnet / goerli / zksync")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("amount")
+                        .short("a")
+                        .long("amount")
+                        .value_name("Eth amount")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("slippage")
+                        .short("s")
+                        .long("slippage")
+                        .value_name("SLIPPAGE")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("native")
+                        .short("n")
+                        .long("native")
+                        .value_name("NATIVE")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("allow")
+                        .long("allow")
+                        .value_name("ALLOW")
+                        .takes_value(true),
+                ),
+        )
+        .subcommand(
+            App::new("sell")
+                .about("Sell a token")
+                .arg(
+                    Arg::with_name("token")
+                        .short("t")
+                        .long("token")
+                        .value_name("TOKEN")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("slippage")
+                        .short("s")
+                        .long("slippage")
+                        .value_name("SLIPPAGE")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("native")
+                        .short("n")
+                        .long("native")
+                        .value_name("NATIVE")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("allow")
+                        .short("a")
+                        .long("allow")
+                        .value_name("ALLOW")
+                        .takes_value(true),
+                ),
+        )
         .get_matches();
 
-    // let zk_rpc = if test_mode {
-    //     "https://testnet.era.zksync.dev"
-    // } else {
-    //     "https://mainnet.era.zksync.io"
-    // };
+    match matches.subcommand() {
+        ("buy", Some(buy_matches)) => {
+            let token = buy_matches.value_of("token").unwrap();
+            let chain = buy_matches
+                .value_of("chain")
+                .unwrap()
+                .parse::<Chain>()
+                .unwrap();
+            let amount = buy_matches.value_of("amount").unwrap();
+            let slippage = buy_matches.value_of("slippage").unwrap_or("0.02");
+            let native = buy_matches
+                .value_of("native")
+                .unwrap_or("false")
+                .parse::<bool>()
+                .unwrap();
+            let allow = buy_matches
+                .value_of("allow")
+                .unwrap_or("true")
+                .parse::<bool>()
+                .unwrap();
 
-    let phrase = dotenv!("MNEMONIC");
-    let mainnet_rpc = dotenv!("ALCHEMY_MAINNET_RPC");
+            info!(
+                "Buying token: {}, chain: {}, amount: {}, slippage: {}, native: {}, allow: {}",
+                token, chain, amount, slippage, native, allow
+            );
 
-    let builder = MnemonicBuilder::<English>::default()
-        .phrase(phrase)
-        .derivation_path(format!("m/44'/60'/0'/0/{}", 0).as_str())
-        .unwrap();
-
-    let wallet = builder.build().unwrap().with_chain_id(Chain::Mainnet);
-    let mut provider = Provider::connect(mainnet_rpc).await;
-    provider.set_chain(Chain::Mainnet);
-    let client = SignerMiddleware::new(provider.clone(), wallet.clone());
-
-    let c = client.get_chainid().await?;
-    let address: Address = client.address();
-    let balance = provider.get_balance(wallet.address(), None).await.unwrap();
-    let address_str = format!("{:#x}", address);
-
-    println!("Balance: {}", balance);
-    println!("Chain ID: {}", c);
-    println!("Address: {}", address_str);
-
-    let amount = parse_ether("0.05").unwrap().to_string();
-
-    let swap = buy_token_weth(client, USDC_ETH_ADDRESS, amount.as_str());
-    swap.await;
-
-    // let tx = swap_eth_for_usdc(client, ethers::types::U256::from(0), amount).await?;
-
-    // client.send_transaction(typed, None).await?;
-
-    // let transport = Http::new("http://localhost:8545")?;
-    // let web3 = Web3::new(transport);
-
-    // match matches.value_of("dapp") {
-    //     Some("syncswap") => {
-    //         let balance =
-    //             syncswap::get_balance(&web3, "0x1234567890123456789012345678901234567890").await?;
-    //         println!("Balance: {}", balance);
-    //     }
-    //     _ => println!("Unknown dapp"),
-    // }
-
-    // let tx = TransactionRequest::new()
-    //     .to("0xBc63552E466B4fd2B6fbC5a3D1f3bD556c45FD7a")
-    //     .chain_id(324u64)
-    //     .from(address)
-    //     .value(1_000_000u128);
-
-    // let typed = TypedTransaction::Legacy(tx);
-
-    // let signature = client.sign_transaction(&typed, address).await?;
-
+            let client = NexusClient::new(chain).await;
+            buy_token_wrapped(client.signer, token, amount).await;
+        }
+        _ => {
+            println!("no subcommand provided");
+        }
+    }
     Ok(())
 }

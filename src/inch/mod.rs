@@ -1,6 +1,6 @@
 mod aggregation_router_v5;
 
-use std::str::FromStr;
+use std::{hash::Hash, str::FromStr};
 
 use ethers::{
     abi::ethabi::Bytes,
@@ -15,6 +15,7 @@ use inch_api::{
     apis::{configuration::Configuration, swap_api},
     models::SwapResponseDtoTx,
 };
+use paris::{error, info};
 
 pub struct InchApi {
     configuration: Configuration,
@@ -88,16 +89,17 @@ impl InchApi {
             .from(self.client.address())
             .value(U256::from_str(swap.value.as_str()).unwrap());
 
-        println!("tx {:?}", tx);
+        info!("Transaction request {:?}", tx);
 
         let tx = self.client.send_transaction(tx, None).await;
         match tx {
-            Ok(tx) => println!("tx pending:  {:?}", tx),
-            Err(e) => println!("error {:?}", e),
+            Ok(tx) => info!("Sent: {:?}", tx),
+            Err(e) => error!("error {:?}", e),
         }
     }
 
     pub async fn swap(&self, from: &str, to: &str, amount: &str) {
+        info!("Swapping {} {} for {} ...", amount, from, to);
         let swap = self.get_swap(from, to, amount).await.unwrap();
         self.send_swap(*swap.tx).await;
     }
@@ -112,7 +114,8 @@ impl InchApi {
         inch_api::apis::Error<inch_api::apis::swap_api::ExchangeControllerGetSwapError>,
     > {
         let quote = &self.get_quote(from, to, amount).await.unwrap();
-
+        info!("Estimted amount: {:?}", quote.to_token_amount);
+        info!("Preparing swap ... ");
         swap_api::exchange_controller_get_swap(
             &self.configuration,
             from,
@@ -137,53 +140,5 @@ impl InchApi {
             None,
         )
         .await
-
-        // let router = aggregation_router_v5::AggregationRouterV5::new(
-        //     H160::from_str(INCH_ROUTER_ETH_ADDRESS).unwrap(),
-        //     client.clone().into(),
-        // );
-
-        // let min_return_amount = U256::zero();
-
-        // let desc = aggregation_router_v5::SwapDescription {
-        //     amount,
-        //     src_token: from,
-        //     dst_token: to,
-        //     src_receiver: H160::from_str(INCH_EXECUTOR_ETH_ADDRESS).unwrap(),
-        //     dst_receiver: client.address(),
-        //     min_return_amount,
-        //     flags: U256::from(0),
-        // };
-
-        // let mut permit = Bytes::from([]);
-
-        // if needs_approve {
-        //     permit = ApproveCall {
-        //         spender: H160::from_str(INCH_EXECUTOR_ETH_ADDRESS).unwrap(),
-        //         value: U256::max_value(),
-        //     }
-        //     .into()
-        // }
-
-        // let swap = router.swap(
-        //     H160::from_str(INCH_EXECUTOR_ETH_ADDRESS).unwrap(),
-        //     desc,
-        //     permit,
-        //     Bytes::from([]),
-        // );
-
-        // let gas_limit = match swap.estimate_gas().await {
-        //     Ok(gas) => gas,
-        //     Err(e) => {
-        //         println!("error {:?}", e);
-        //         return;
-        //     }
-        // };
-
-        // println!("gas limit {}", gas_limit);
-
-        // let tx = swap.gas(gas_limit);
-        // let exec = tx.send().await.unwrap();
-        // println!("tx submitted {:?}", exec);
     }
 }
