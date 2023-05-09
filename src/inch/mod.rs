@@ -1,13 +1,13 @@
 mod aggregation_router_v5;
 
-use std::{hash::Hash, str::FromStr};
+use std::str::FromStr;
 
 use ethers::{
     abi::ethabi::Bytes,
-    prelude::{k256, SignerMiddleware},
+    prelude::{k256, signer::SignerMiddlewareError, SignerMiddleware},
     providers::{Http, Middleware, Provider},
-    types::{transaction::eip2718::TypedTransaction, TransactionRequest, H160, U256, U64},
-    utils::hex::FromHex,
+    types::{TransactionRequest, H160, U256},
+    utils::{format_units, hex::FromHex},
 };
 
 use ethers_signers::Wallet;
@@ -43,15 +43,12 @@ impl InchApi {
         format!("{:#x}", self.client.address())
     }
 
-    async fn chain_id_u64(&self) -> U64 {
-        let chain_id = self.client.get_chainid().await;
-        match chain_id {
-            Ok(id) => id.as_u64().into(),
-            Err(e) => {
-                println!("error {:?}", e);
-                return U64::zero();
-            }
-        }
+    async fn chain_id(
+        &self,
+    ) -> Result<String, SignerMiddlewareError<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>>
+    {
+        let id = self.client.get_chainid().await;
+        id.map(|id| id.to_string())
     }
 
     async fn get_quote(
@@ -65,6 +62,7 @@ impl InchApi {
     > {
         swap_api::exchange_controller_get_quote(
             &self.configuration,
+            self.chain_id().await.unwrap().as_str(),
             from,
             to,
             amount,
@@ -87,20 +85,36 @@ impl InchApi {
             .gas(U256::from(swap.gas))
             .gas_price(U256::from_dec_str(swap.gas_price.as_str()).unwrap())
             .from(self.client.address())
-            .value(U256::from_str(swap.value.as_str()).unwrap());
+            .value(U256::from_dec_str(swap.value.as_str()).unwrap());
 
-        info!("Transaction request {:?}", tx);
+        info!("<yellow>Transaction request</> {:?}", tx);
 
         let tx = self.client.send_transaction(tx, None).await;
         match tx {
-            Ok(tx) => info!("Sent: {:?}", tx),
-            Err(e) => error!("error {:?}", e),
+            Ok(tx) => info!("<bright-green>Sent</> {:?}", tx),
+            Err(e) => error!("<bright-red>error</> {:?}", e),
         }
     }
 
     pub async fn swap(&self, from: &str, to: &str, amount: &str) {
-        info!("Swapping {} {} for {} ...", amount, from, to);
         let swap = self.get_swap(from, to, amount).await.unwrap();
+
+        info!(
+            "<cyan>Swapping</> {:?} {} for {:?} {} ...",
+            format_units(
+                U256::from_dec_str(swap.from_token_amount.as_str()).unwrap(),
+                swap.from_token.decimals as u32,
+            )
+            .unwrap(),
+            swap.from_token.symbol,
+            format_units(
+                U256::from_dec_str(swap.to_token_amount.as_str()).unwrap(),
+                swap.to_token.decimals as u32,
+            )
+            .unwrap(),
+            swap.to_token.symbol,
+        );
+
         self.send_swap(*swap.tx).await;
     }
 
@@ -114,10 +128,9 @@ impl InchApi {
         inch_api::apis::Error<inch_api::apis::swap_api::ExchangeControllerGetSwapError>,
     > {
         let quote = &self.get_quote(from, to, amount).await.unwrap();
-        info!("Estimted amount: {:?}", quote.to_token_amount);
-        info!("Preparing swap ... ");
         swap_api::exchange_controller_get_swap(
             &self.configuration,
+            self.chain_id().await.unwrap().as_str(),
             from,
             to,
             amount,

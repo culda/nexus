@@ -1650,7 +1650,6 @@ pub mod aggregation_router_v5 {
                 Self::BadPool(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::BadSignature(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::ETHTransferFailed(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::ETHTransferFailed(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::EmptyPools(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::EthDepositRejected(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
@@ -1664,7 +1663,6 @@ pub mod aggregation_router_v5 {
                 Self::InsufficientBalance(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::InvalidMsgValue(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::InvalidMsgValue(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::InvalidatedOrder(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::MakingAmountExceeded(element) => {
@@ -1942,13 +1940,11 @@ pub mod aggregation_router_v5 {
                 Self::BadPool(element) => ::core::fmt::Display::fmt(element, f),
                 Self::BadSignature(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ETHTransferFailed(element) => ::core::fmt::Display::fmt(element, f),
-                Self::ETHTransferFailed(element) => ::core::fmt::Display::fmt(element, f),
                 Self::EmptyPools(element) => ::core::fmt::Display::fmt(element, f),
                 Self::EthDepositRejected(element) => ::core::fmt::Display::fmt(element, f),
                 Self::GetAmountCallFailed(element) => ::core::fmt::Display::fmt(element, f),
                 Self::IncorrectDataLength(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InsufficientBalance(element) => ::core::fmt::Display::fmt(element, f),
-                Self::InvalidMsgValue(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidMsgValue(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidatedOrder(element) => ::core::fmt::Display::fmt(element, f),
                 Self::MakingAmountExceeded(element) => ::core::fmt::Display::fmt(element, f),

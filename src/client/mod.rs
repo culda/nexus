@@ -6,7 +6,8 @@ use ethers::{
     providers::{Http, Provider, ProviderExt},
     types::Chain,
 };
-use ethers_signers::{coins_bip39::English, MnemonicBuilder, Wallet};
+use ethers_signers::{coins_bip39::English, MnemonicBuilder, Signer, Wallet};
+use paris::error;
 
 pub struct NexusClient {
     pub signer: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
@@ -18,7 +19,11 @@ impl NexusClient {
             Chain::Mainnet => dotenv!("MAINNET_RPC"),
             Chain::Goerli => dotenv!("GOERLI_RPC"),
             Chain::ZkSync => "https://mainnet.era.zksync.io",
-            _ => panic!("Unsupported chain: {}", chain),
+            Chain::Arbitrum => "https://arb1.arbitrum.io/rpc",
+            _ => {
+                error!("Unsupported chain: {}", chain);
+                std::process::exit(1);
+            }
         };
 
         let phrase = dotenv!("MNEMONIC");
@@ -28,7 +33,7 @@ impl NexusClient {
             .derivation_path(format!("m/44'/60'/0'/0/{}", 0).as_str())
             .unwrap();
 
-        let wallet = builder.build().unwrap();
+        let wallet = builder.build().unwrap().with_chain_id(chain);
 
         let mut provider = Provider::connect(rpc_url).await;
         provider.set_chain(chain);

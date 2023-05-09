@@ -23,12 +23,12 @@ pub enum FactoryHealthCheckControllerHealthcheckError {
 }
 
 
-pub async fn factory_health_check_controller_healthcheck(configuration: &configuration::Configuration, ) -> Result<(), Error<FactoryHealthCheckControllerHealthcheckError>> {
+pub async fn factory_health_check_controller_healthcheck(configuration: &configuration::Configuration, chain: &str) -> Result<(), Error<FactoryHealthCheckControllerHealthcheckError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
-    let local_var_uri_str = format!("{}/v5.0/1/healthcheck", local_var_configuration.base_path);
+    let local_var_uri_str = format!("{}/v5.0/{chain}/healthcheck", local_var_configuration.base_path, chain=crate::apis::urlencode(chain));
     let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {

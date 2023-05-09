@@ -1,37 +1,9 @@
-#[macro_use]
-extern crate dotenv_codegen;
-
 use clap::{App, Arg};
 
-use nexus::{client::NexusClient, cmd::buy_token_wrapped, constants::USDC_ETH_ADDRESS};
-use std::str::FromStr;
+use nexus::{client::NexusClient, cmd::buy_token_native};
 
-use ethers::{
-    abi::Address,
-    middleware::SignerMiddleware,
-    prelude::{coins_bip39::English, MnemonicBuilder, TransactionRequest},
-    providers::{Http, Middleware, Provider, ProviderExt},
-    types::{transaction::eip2718::TypedTransaction, Chain, H160},
-    utils::{parse_ether, parse_units},
-};
-use ethers_signers::Signer;
-use paris::{error, info, log};
-
-pub struct MyChain(Chain);
-
-impl FromStr for MyChain {
-    type Err = &'static str;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Mainnet" | "1" => Ok(MyChain(Chain::Mainnet)),
-            "Morden" | "2" => Ok(MyChain(Chain::Morden)),
-            "Ropsten" | "3" => Ok(MyChain(Chain::Ropsten)),
-            "Rinkeby" | "4" => Ok(MyChain(Chain::Rinkeby)),
-            _ => Err("Invalid chain name"),
-        }
-    }
-}
+use ethers::types::Chain;
+use paris::{error, info};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -51,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Arg::with_name("chain")
                         .short("c")
                         .long("chain")
-                        .value_name("mainnet / goerli / zksync")
+                        .value_name("mainnet / goerli / zksync / arbitrum")
                         .takes_value(true)
                         .required(true),
                 )
@@ -125,12 +97,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .value_of("chain")
                 .unwrap()
                 .parse::<Chain>()
-                .unwrap();
+                .unwrap_or_else(|_| {
+                    error!(
+                        "Invalid chain name. Valid chains: mainnet / goerli / zksync / arbitrum"
+                    );
+                    std::process::exit(1);
+                });
             let amount = buy_matches.value_of("amount").unwrap();
             let slippage = buy_matches.value_of("slippage").unwrap_or("0.02");
             let native = buy_matches
                 .value_of("native")
-                .unwrap_or("false")
+                .unwrap_or("true")
                 .parse::<bool>()
                 .unwrap();
             let allow = buy_matches
@@ -140,12 +117,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .unwrap();
 
             info!(
-                "Buying token: {}, chain: {}, amount: {}, slippage: {}, native: {}, allow: {}",
+                "Buy token: {}, chain: {}, amount: {}, slippage: {}, native: {}, allow: {}",
                 token, chain, amount, slippage, native, allow
             );
 
+            if !native {
+                error!("Only native tokens are supported for now");
+                std::process::exit(1);
+            }
+
             let client = NexusClient::new(chain).await;
-            buy_token_wrapped(client.signer, token, amount).await;
+            buy_token_native(client.signer, token, amount).await;
         }
         _ => {
             println!("no subcommand provided");

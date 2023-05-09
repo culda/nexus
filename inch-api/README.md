@@ -36,15 +36,15 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*ApproveApi* | [**chain_approve_controller_get_allowance**](docs/ApproveApi.md#chain_approve_controller_get_allowance) | **GET** /v5.0/1/approve/allowance | Get the number of tokens that the 1inch router is allowed to spend
-*ApproveApi* | [**chain_approve_controller_get_call_data**](docs/ApproveApi.md#chain_approve_controller_get_call_data) | **GET** /v5.0/1/approve/transaction | Generate data for calling the contract in order to allow the 1inch router to spend funds
-*ApproveApi* | [**chain_approve_controller_get_spender**](docs/ApproveApi.md#chain_approve_controller_get_spender) | **GET** /v5.0/1/approve/spender | Address of the 1inch router that must be trusted to spend funds for the exchange
-*HealthcheckApi* | [**factory_health_check_controller_healthcheck**](docs/HealthcheckApi.md#factory_health_check_controller_healthcheck) | **GET** /v5.0/1/healthcheck | API health check
-*InfoApi* | [**chain_presets_controller_get_presets**](docs/InfoApi.md#chain_presets_controller_get_presets) | **GET** /v5.0/1/presets | List of preset configurations for the 1inch router
-*InfoApi* | [**chain_protocols_controller_get_protocols_images**](docs/InfoApi.md#chain_protocols_controller_get_protocols_images) | **GET** /v5.0/1/liquidity-sources | List of liquidity sources that are available for routing in the 1inch Aggregation protocol
-*InfoApi* | [**chain_tokens_controller_get_tokens**](docs/InfoApi.md#chain_tokens_controller_get_tokens) | **GET** /v5.0/1/tokens | List of tokens that are available for swap in the 1inch Aggregation protocol
-*SwapApi* | [**exchange_controller_get_quote**](docs/SwapApi.md#exchange_controller_get_quote) | **GET** /v5.0/1/quote | Find the best quote to exchange via 1inch router
-*SwapApi* | [**exchange_controller_get_swap**](docs/SwapApi.md#exchange_controller_get_swap) | **GET** /v5.0/1/swap | Generate data for calling the 1inch router for exchange
+*ApproveApi* | [**chain_approve_controller_get_allowance**](docs/ApproveApi.md#chain_approve_controller_get_allowance) | **GET** /v5.0/{chain}/approve/allowance | Get the number of tokens that the 1inch router is allowed to spend
+*ApproveApi* | [**chain_approve_controller_get_call_data**](docs/ApproveApi.md#chain_approve_controller_get_call_data) | **GET** /v5.0/{chain}/approve/transaction | Generate data for calling the contract in order to allow the 1inch router to spend funds
+*ApproveApi* | [**chain_approve_controller_get_spender**](docs/ApproveApi.md#chain_approve_controller_get_spender) | **GET** /v5.0/{chain}/approve/spender | Address of the 1inch router that must be trusted to spend funds for the exchange
+*HealthcheckApi* | [**factory_health_check_controller_healthcheck**](docs/HealthcheckApi.md#factory_health_check_controller_healthcheck) | **GET** /v5.0/{chain}/healthcheck | API health check
+*InfoApi* | [**chain_presets_controller_get_presets**](docs/InfoApi.md#chain_presets_controller_get_presets) | **GET** /v5.0/{chain}/presets | List of preset configurations for the 1inch router
+*InfoApi* | [**chain_protocols_controller_get_protocols_images**](docs/InfoApi.md#chain_protocols_controller_get_protocols_images) | **GET** /v5.0/{chain}/liquidity-sources | List of liquidity sources that are available for routing in the 1inch Aggregation protocol
+*InfoApi* | [**chain_tokens_controller_get_tokens**](docs/InfoApi.md#chain_tokens_controller_get_tokens) | **GET** /v5.0/{chain}/tokens | List of tokens that are available for swap in the 1inch Aggregation protocol
+*SwapApi* | [**exchange_controller_get_quote**](docs/SwapApi.md#exchange_controller_get_quote) | **GET** /v5.0/{chain}/quote | Find the best quote to exchange via 1inch router
+*SwapApi* | [**exchange_controller_get_swap**](docs/SwapApi.md#exchange_controller_get_swap) | **GET** /v5.0/{chain}/swap | Generate data for calling the 1inch router for exchange
 
 
 ## Documentation For Models

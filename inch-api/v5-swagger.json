@@ -1,7 +1,17 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/v5.0/1/healthcheck": {
+    "/v5.0/{chain}/healthcheck": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "FactoryHealthCheckController_healthcheck",
         "summary": "API health check",
@@ -12,7 +22,17 @@
         "tags": ["Healthcheck"]
       }
     },
-    "/v5.0/1/approve/spender": {
+    "/v5.0/{chain}/approve/spender": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "ChainApproveController_getSpender",
         "summary": "Address of the 1inch router that must be trusted to spend funds for the exchange",
@@ -32,7 +52,17 @@
         "tags": ["Approve"]
       }
     },
-    "/v5.0/1/approve/transaction": {
+    "/v5.0/{chain}/approve/transaction": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "ChainApproveController_getCallData",
         "summary": "Generate data for calling the contract in order to allow the 1inch router to spend funds",
@@ -69,7 +99,17 @@
         "tags": ["Approve"]
       }
     },
-    "/v5.0/1/approve/allowance": {
+    "/v5.0/{chain}/approve/allowance": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "ChainApproveController_getAllowance",
         "summary": "Get the number of tokens that the 1inch router is allowed to spend",
@@ -94,7 +134,17 @@
         "tags": ["Approve"]
       }
     },
-    "/v5.0/1/tokens": {
+    "/v5.0/{chain}/tokens": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "ChainTokensController_getTokens",
         "summary": "List of tokens that are available for swap in the 1inch Aggregation protocol",
@@ -112,7 +162,17 @@
         "tags": ["Info"]
       }
     },
-    "/v5.0/1/presets": {
+    "/v5.0/{chain}/presets": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "ChainPresetsController_getPresets",
         "summary": "List of preset configurations for the 1inch router",
@@ -121,7 +181,17 @@
         "tags": ["Info"]
       }
     },
-    "/v5.0/1/liquidity-sources": {
+    "/v5.0/{chain}/liquidity-sources": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "ChainProtocolsController_getProtocolsImages",
         "summary": "List of liquidity sources that are available for routing in the 1inch Aggregation protocol",
@@ -141,7 +211,17 @@
         "tags": ["Info"]
       }
     },
-    "/v5.0/1/quote": {
+    "/v5.0/{chain}/quote": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "ExchangeController_getQuote",
         "summary": "Find the best quote to exchange via 1inch router",
@@ -249,7 +329,17 @@
         "tags": ["Swap"]
       }
     },
-    "/v5.0/1/swap": {
+    "/v5.0/{chain}/swap": {
+      "parameters": [
+        {
+          "name": "chain",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
       "get": {
         "operationId": "ExchangeController_getSwap",
         "summary": "Generate data for calling the 1inch router for exchange",

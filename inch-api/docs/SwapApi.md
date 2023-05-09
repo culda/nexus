@@ -4,14 +4,14 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**exchange_controller_get_quote**](SwapApi.md#exchange_controller_get_quote) | **GET** /v5.0/1/quote | Find the best quote to exchange via 1inch router
-[**exchange_controller_get_swap**](SwapApi.md#exchange_controller_get_swap) | **GET** /v5.0/1/swap | Generate data for calling the 1inch router for exchange
+[**exchange_controller_get_quote**](SwapApi.md#exchange_controller_get_quote) | **GET** /v5.0/{chain}/quote | Find the best quote to exchange via 1inch router
+[**exchange_controller_get_swap**](SwapApi.md#exchange_controller_get_swap) | **GET** /v5.0/{chain}/swap | Generate data for calling the 1inch router for exchange
 
 
 
 ## exchange_controller_get_quote
 
-> crate::models::QuoteResponseDto exchange_controller_get_quote(from_token_address, to_token_address, amount, protocols, fee, gas_limit, connector_tokens, complexity_level, main_route_parts, parts, gas_price)
+> crate::models::QuoteResponseDto exchange_controller_get_quote(chain, from_token_address, to_token_address, amount, protocols, fee, gas_limit, connector_tokens, complexity_level, main_route_parts, parts, gas_price)
 Find the best quote to exchange via 1inch router
 
 ### Parameters
@@ -19,6 +19,7 @@ Find the best quote to exchange via 1inch router
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
+**chain** | **String** |  | [required] |
 **from_token_address** | **String** |  | [required] |
 **to_token_address** | **String** |  | [required] |
 **amount** | **String** |  | [required] |
@@ -49,7 +50,7 @@ No authorization required
 
 ## exchange_controller_get_swap
 
-> crate::models::SwapResponseDto exchange_controller_get_swap(from_token_address, to_token_address, amount, from_address, slippage, protocols, dest_receiver, referrer_address, fee, disable_estimate, permit, compatibility_mode, burn_chi, allow_partial_fill, parts, main_route_parts, connector_tokens, complexity_level, gas_limit, gas_price)
+> crate::models::SwapResponseDto exchange_controller_get_swap(chain, from_token_address, to_token_address, amount, from_address, slippage, protocols, dest_receiver, referrer_address, fee, disable_estimate, permit, compatibility_mode, burn_chi, allow_partial_fill, parts, main_route_parts, connector_tokens, complexity_level, gas_limit, gas_price)
 Generate data for calling the 1inch router for exchange
 
 ### Parameters
@@ -57,6 +58,7 @@ Generate data for calling the 1inch router for exchange
 
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
+**chain** | **String** |  | [required] |
 **from_token_address** | **String** |  | [required] |
 **to_token_address** | **String** |  | [required] |
 **amount** | **String** |  | [required] |

@@ -37,12 +37,12 @@ pub enum ChainApproveControllerGetSpenderError {
 }
 
 
-pub async fn chain_approve_controller_get_allowance(configuration: &configuration::Configuration, token_address: &str, wallet_address: &str) -> Result<(), Error<ChainApproveControllerGetAllowanceError>> {
+pub async fn chain_approve_controller_get_allowance(configuration: &configuration::Configuration, chain: &str, token_address: &str, wallet_address: &str) -> Result<(), Error<ChainApproveControllerGetAllowanceError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
-    let local_var_uri_str = format!("{}/v5.0/1/approve/allowance", local_var_configuration.base_path);
+    let local_var_uri_str = format!("{}/v5.0/{chain}/approve/allowance", local_var_configuration.base_path, chain=crate::apis::urlencode(chain));
     let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
     local_var_req_builder = local_var_req_builder.query(&[("tokenAddress", &token_address.to_string())]);
@@ -66,12 +66,12 @@ pub async fn chain_approve_controller_get_allowance(configuration: &configuratio
     }
 }
 
-pub async fn chain_approve_controller_get_call_data(configuration: &configuration::Configuration, token_address: &str, amount: Option<&str>) -> Result<crate::models::ApproveCalldataResponseDto, Error<ChainApproveControllerGetCallDataError>> {
+pub async fn chain_approve_controller_get_call_data(configuration: &configuration::Configuration, chain: &str, token_address: &str, amount: Option<&str>) -> Result<crate::models::ApproveCalldataResponseDto, Error<ChainApproveControllerGetCallDataError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
-    let local_var_uri_str = format!("{}/v5.0/1/approve/transaction", local_var_configuration.base_path);
+    let local_var_uri_str = format!("{}/v5.0/{chain}/approve/transaction", local_var_configuration.base_path, chain=crate::apis::urlencode(chain));
     let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
     local_var_req_builder = local_var_req_builder.query(&[("tokenAddress", &token_address.to_string())]);
@@ -97,12 +97,12 @@ pub async fn chain_approve_controller_get_call_data(configuration: &configuratio
     }
 }
 
-pub async fn chain_approve_controller_get_spender(configuration: &configuration::Configuration, ) -> Result<crate::models::ApproveSpenderResponseDto, Error<ChainApproveControllerGetSpenderError>> {
+pub async fn chain_approve_controller_get_spender(configuration: &configuration::Configuration, chain: &str) -> Result<crate::models::ApproveSpenderResponseDto, Error<ChainApproveControllerGetSpenderError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
-    let local_var_uri_str = format!("{}/v5.0/1/approve/spender", local_var_configuration.base_path);
+    let local_var_uri_str = format!("{}/v5.0/{chain}/approve/spender", local_var_configuration.base_path, chain=crate::apis::urlencode(chain));
     let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {

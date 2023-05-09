@@ -37,12 +37,12 @@ pub enum ChainTokensControllerGetTokensError {
 }
 
 
-pub async fn chain_presets_controller_get_presets(configuration: &configuration::Configuration, ) -> Result<(), Error<ChainPresetsControllerGetPresetsError>> {
+pub async fn chain_presets_controller_get_presets(configuration: &configuration::Configuration, chain: &str) -> Result<(), Error<ChainPresetsControllerGetPresetsError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
-    let local_var_uri_str = format!("{}/v5.0/1/presets", local_var_configuration.base_path);
+    let local_var_uri_str = format!("{}/v5.0/{chain}/presets", local_var_configuration.base_path, chain=crate::apis::urlencode(chain));
     let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
@@ -64,12 +64,12 @@ pub async fn chain_presets_controller_get_presets(configuration: &configuration:
     }
 }
 
-pub async fn chain_protocols_controller_get_protocols_images(configuration: &configuration::Configuration, ) -> Result<crate::models::ProtocolsResponseDto, Error<ChainProtocolsControllerGetProtocolsImagesError>> {
+pub async fn chain_protocols_controller_get_protocols_images(configuration: &configuration::Configuration, chain: &str) -> Result<crate::models::ProtocolsResponseDto, Error<ChainProtocolsControllerGetProtocolsImagesError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
-    let local_var_uri_str = format!("{}/v5.0/1/liquidity-sources", local_var_configuration.base_path);
+    let local_var_uri_str = format!("{}/v5.0/{chain}/liquidity-sources", local_var_configuration.base_path, chain=crate::apis::urlencode(chain));
     let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
@@ -91,12 +91,12 @@ pub async fn chain_protocols_controller_get_protocols_images(configuration: &con
     }
 }
 
-pub async fn chain_tokens_controller_get_tokens(configuration: &configuration::Configuration, ) -> Result<crate::models::TokensResponseDto, Error<ChainTokensControllerGetTokensError>> {
+pub async fn chain_tokens_controller_get_tokens(configuration: &configuration::Configuration, chain: &str) -> Result<crate::models::TokensResponseDto, Error<ChainTokensControllerGetTokensError>> {
     let local_var_configuration = configuration;
 
     let local_var_client = &local_var_configuration.client;
 
-    let local_var_uri_str = format!("{}/v5.0/1/tokens", local_var_configuration.base_path);
+    let local_var_uri_str = format!("{}/v5.0/{chain}/tokens", local_var_configuration.base_path, chain=crate::apis::urlencode(chain));
     let mut local_var_req_builder = local_var_client.request(reqwest::Method::GET, local_var_uri_str.as_str());
 
     if let Some(ref local_var_user_agent) = local_var_configuration.user_agent {
