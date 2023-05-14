@@ -1,5 +1,4 @@
 mod aggregation_router_v5;
-
 use std::str::FromStr;
 
 use ethers::{
@@ -7,7 +6,7 @@ use ethers::{
     prelude::{k256, signer::SignerMiddlewareError, SignerMiddleware},
     providers::{Http, Middleware, Provider},
     types::{TransactionRequest, H160, U256},
-    utils::{format_units, hex::FromHex},
+    utils::{format_units, hex::FromHex, parse_units},
 };
 
 use ethers_signers::Wallet;
@@ -20,21 +19,20 @@ use paris::{error, info};
 pub struct InchApi {
     configuration: Configuration,
     slippage: f32,
-    fee: f32,
-    client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+    pub client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
 }
 
 impl InchApi {
-    pub fn new(client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>) -> Self {
+    pub fn new(
+        client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+        slippage: f32,
+    ) -> Self {
         let mut configuration = Configuration::new();
         configuration.base_path = "https://api.1inch.io".to_string();
-        let slippage = 0.05;
-        let fee = f32::min(f32::max(0.2, slippage * 0.1), 3.0);
 
         InchApi {
             configuration,
             slippage,
-            fee,
             client,
         }
     }
@@ -87,11 +85,9 @@ impl InchApi {
             .from(self.client.address())
             .value(U256::from_dec_str(swap.value.as_str()).unwrap());
 
-        info!("<yellow>Transaction request</> {:?}", tx);
-
         let tx = self.client.send_transaction(tx, None).await;
         match tx {
-            Ok(tx) => info!("<bright-green>Sent</> {:?}", tx),
+            Ok(tx) => info!("<bright-green>Done</> {:?}", tx),
             Err(e) => error!("<bright-red>error</> {:?}", e),
         }
     }
@@ -128,6 +124,16 @@ impl InchApi {
         inch_api::apis::Error<inch_api::apis::swap_api::ExchangeControllerGetSwapError>,
     > {
         let quote = &self.get_quote(from, to, amount).await.unwrap();
+        info!(
+            "<cyan>Quote</> {} {}",
+            parse_units(
+                quote.to_token_amount.as_str(),
+                quote.to_token.decimals as u32
+            )
+            .unwrap(),
+            quote.to_token.symbol
+        );
+
         swap_api::exchange_controller_get_swap(
             &self.configuration,
             self.chain_id().await.unwrap().as_str(),
@@ -139,7 +145,7 @@ impl InchApi {
             None,
             None,
             None,
-            Some(self.fee.to_string().as_str()),
+            None,
             None,
             None,
             None,

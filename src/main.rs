@@ -1,6 +1,10 @@
 use clap::{App, Arg};
 
-use nexus::{client::NexusClient, cmd::buy_token_native};
+use nexus::{
+    client::NexusClient,
+    cmd::swap_tokens,
+    constants::{weth_address, INCH_NATIVE_ADDRESS},
+};
 
 use ethers::types::Chain;
 use paris::{error, info};
@@ -46,47 +50,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Arg::with_name("native")
                         .short("n")
                         .long("native")
-                        .value_name("NATIVE")
-                        .takes_value(true),
+                        .value_name("NATIVE"),
                 )
-                .arg(
-                    Arg::with_name("allow")
-                        .long("allow")
-                        .value_name("ALLOW")
-                        .takes_value(true),
-                ),
-        )
-        .subcommand(
-            App::new("sell")
-                .about("Sell a token")
-                .arg(
-                    Arg::with_name("token")
-                        .short("t")
-                        .long("token")
-                        .value_name("TOKEN")
-                        .required(true),
-                )
-                .arg(
-                    Arg::with_name("slippage")
-                        .short("s")
-                        .long("slippage")
-                        .value_name("SLIPPAGE")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("native")
-                        .short("n")
-                        .long("native")
-                        .value_name("NATIVE")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("allow")
-                        .short("a")
-                        .long("allow")
-                        .value_name("ALLOW")
-                        .takes_value(true),
-                ),
+                .arg(Arg::with_name("allowmax").long("allowmax")),
         )
         .get_matches();
 
@@ -104,30 +70,46 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     std::process::exit(1);
                 });
             let amount = buy_matches.value_of("amount").unwrap();
-            let slippage = buy_matches.value_of("slippage").unwrap_or("0.02");
+            let slippage = buy_matches
+                .value_of("slippage")
+                .unwrap_or("0.02")
+                .parse::<f32>()
+                .unwrap_or_else(|_| {
+                    error!("Invalid slippage value");
+                    std::process::exit(1);
+                });
             let native = buy_matches
                 .value_of("native")
                 .unwrap_or("true")
                 .parse::<bool>()
                 .unwrap();
-            let allow = buy_matches
-                .value_of("allow")
+            let allow_max = buy_matches
+                .value_of("allowmax")
                 .unwrap_or("true")
                 .parse::<bool>()
                 .unwrap();
 
             info!(
-                "Buy token: {}, chain: {}, amount: {}, slippage: {}, native: {}, allow: {}",
-                token, chain, amount, slippage, native, allow
+                "Buy token: {}, chain: {}, amount: {}, slippage: {}, native: {}, allowmax: {}",
+                token, chain, amount, slippage, native, allow_max
             );
 
-            if !native {
-                error!("Only native tokens are supported for now");
-                std::process::exit(1);
-            }
-
             let client = NexusClient::new(chain).await;
-            buy_token_native(client.signer, token, amount).await;
+
+            let from_token = match native {
+                true => INCH_NATIVE_ADDRESS,
+                false => weth_address(chain),
+            };
+
+            swap_tokens(
+                client.signer,
+                from_token,
+                token,
+                amount,
+                slippage,
+                allow_max,
+            )
+            .await;
         }
         _ => {
             println!("no subcommand provided");
