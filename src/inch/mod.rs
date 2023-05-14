@@ -6,7 +6,7 @@ use ethers::{
     prelude::{k256, signer::SignerMiddlewareError, SignerMiddleware},
     providers::{Http, Middleware, Provider},
     types::{TransactionRequest, H160, U256},
-    utils::{format_units, hex::FromHex, parse_units},
+    utils::{format_units, hex::FromHex},
 };
 
 use ethers_signers::Wallet;
@@ -87,7 +87,7 @@ impl InchApi {
 
         let tx = self.client.send_transaction(tx, None).await;
         match tx {
-            Ok(tx) => info!("<bright-green>Done</> {:?}", tx),
+            Ok(tx) => info!("<bright-green>Done</> {:?}", tx.tx_hash()),
             Err(e) => error!("<bright-red>error</> {:?}", e),
         }
     }
@@ -96,7 +96,7 @@ impl InchApi {
         let swap = self.get_swap(from, to, amount).await.unwrap();
 
         info!(
-            "<cyan>Swapping</> {:?} {} for {:?} {} ...",
+            "<cyan>Swapping</> {} {} for {} {} ...",
             format_units(
                 U256::from_dec_str(swap.from_token_amount.as_str()).unwrap(),
                 swap.from_token.decimals as u32,
@@ -126,8 +126,8 @@ impl InchApi {
         let quote = &self.get_quote(from, to, amount).await.unwrap();
         info!(
             "<cyan>Quote</> {} {}",
-            parse_units(
-                quote.to_token_amount.as_str(),
+            format_units(
+                U256::from_dec_str(quote.to_token_amount.as_str()).unwrap(),
                 quote.to_token.decimals as u32
             )
             .unwrap(),

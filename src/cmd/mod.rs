@@ -12,7 +12,11 @@ use ethers::{
 use ethers_signers::Wallet;
 use paris::{error, info};
 
-use crate::{constants::INCH_ROUTER_ADDRESS, erc20::erc20::ERC20, inch::InchApi};
+use crate::{
+    constants::{INCH_NATIVE_ADDRESS, INCH_ROUTER_ADDRESS},
+    erc20::erc20::ERC20,
+    inch::InchApi,
+};
 
 async fn check_allowance_and_approve(
     client: &SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
@@ -58,8 +62,8 @@ async fn check_allowance_and_approve(
         });
 
         match receipt {
-            Some(receipt) => {
-                info!("<bright-green>Token approved </> {:?}", receipt);
+            Some(_) => {
+                info!("<bright-green>Token approved</>");
             }
             _ => {
                 error!("<bright-red>Failed to approve token </>");
@@ -83,14 +87,16 @@ pub async fn swap_tokens(
 
     info!("1Inch API initialized");
 
-    check_allowance_and_approve(
-        &api.client,
-        address,
-        Address::from_str(from_token).unwrap(),
-        amount,
-        allow_max,
-    )
-    .await;
+    if from_token != INCH_NATIVE_ADDRESS {
+        check_allowance_and_approve(
+            &api.client,
+            address,
+            Address::from_str(from_token).unwrap(),
+            amount,
+            allow_max,
+        )
+        .await;
+    }
 
     api.swap(from_token, to_token, amount.to_string().as_str())
         .await;
