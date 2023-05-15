@@ -2,7 +2,7 @@
 
 A CLI tool for buying/selling tokens on EVM chains using the 1INCH Aggregator protocol.
 
-![ladys](https://github.com/culda/nexus/assets/48595067/f288aa64-50d0-4d3f-8ff9-2cb6fe403825)
+![ladys](https://github.com/culda/nexus/assets/48595067/1482489d-86c4-4422-a29f-1e75c23a4bd7)
 
 **Warning**
 This is an untested tool, bad things can happen. Always use small amounts to test first
