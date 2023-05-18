@@ -33,6 +33,11 @@ pub const USDC_ETH_POOL_DECIMALS: u32 = 18;
 
 pub const ERA_NAME_SERVICE_ADDRESS: &str = "0x935442AF47F3dc1c11F006D551E13769F12eab13";
 
+pub const ARGENT_PROXY_HASH: &str =
+    "0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918";
+pub const ARGENT_IMPL_HASH: &str =
+    "0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918";
+
 pub fn weth_address(chain: Chain) -> &'static str {
     match chain {
         Chain::Mainnet => WETH_ETH_ADDRESS,
