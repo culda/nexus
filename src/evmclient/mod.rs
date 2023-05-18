@@ -12,11 +12,11 @@ use ethers::{
 use ethers_signers::{coins_bip39::English, MnemonicBuilder, Signer, Wallet};
 use paris::error;
 
-pub struct NexusClient {
+pub struct NexusEvmClient {
     pub signer: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
 }
 
-impl NexusClient {
+impl NexusEvmClient {
     pub async fn new(chain: Chain) -> Self {
         dotenv().ok();
         let rpc_url = match chain {
@@ -56,7 +56,7 @@ impl NexusClient {
 
         let signer = SignerMiddleware::new(provider.clone(), wallet.clone());
 
-        NexusClient { signer }
+        NexusEvmClient { signer }
     }
 
     pub fn address(&self) -> String {
