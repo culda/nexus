@@ -1,5 +1,3 @@
-mod sync_swap_router;
-
 use ethers::{
     prelude::{abi, k256, Address, Provider, SignerMiddleware},
     providers::Http,
@@ -13,7 +11,7 @@ use std::{
 
 use crate::{
     constants::{SYNCSWAP_ROUTER_ADDRESS, USDC_ETH_POOL_ADDRESS, WETH_ETH_ADDRESS},
-    syncswap::sync_swap_router::{SwapPath, SwapStep},
+    contract_bindings::sync_swap_router::{self, SwapPath, SwapStep},
 };
 
 pub async fn swap_eth_for_usdc(

@@ -14,7 +14,7 @@ use paris::{error, info};
 
 use crate::{
     constants::{INCH_NATIVE_ADDRESS, INCH_ROUTER_ADDRESS},
-    erc20::erc20::ERC20,
+    contract_bindings::erc20::ERC20,
     inch::InchApi,
 };
 

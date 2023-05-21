@@ -1,4 +1,6 @@
 mod aggregation_router_v5;
+pub mod swap;
+
 use std::str::FromStr;
 
 use ethers::{

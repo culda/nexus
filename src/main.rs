@@ -3,8 +3,8 @@ use nexus::{
     cmd::{parse_args, starknet::match_create_account_args, swap::match_swap_args},
     constants::{weth_address, INCH_NATIVE_ADDRESS},
     evmclient::EvmClient,
+    inch::swap::swap_tokens,
     starknet::StarkClient,
-    swap::swap_tokens,
 };
 
 use paris::info;
