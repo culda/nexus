@@ -2,15 +2,11 @@ use clap::{Arg, ArgMatches};
 
 pub struct CreateAccountArgs<'a> {
     pub index: &'a str,
-    pub path: &'a str,
 }
 
 pub fn match_create_account_args<'a>(matches: &'a ArgMatches<'a>) -> CreateAccountArgs<'a> {
     let index = matches.value_of("index").unwrap();
-    let path = matches
-        .value_of("path")
-        .unwrap_or("m/44'/9004'/0'/0/{index}");
-    CreateAccountArgs { index, path }
+    CreateAccountArgs { index }
 }
 
 pub fn create_account_args() -> Vec<Arg<'static, 'static>> {

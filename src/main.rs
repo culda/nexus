@@ -76,10 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             ("new", Some(new_matches)) => {
                 let new_args = match_create_account_args(new_matches);
 
-                info!(
-                    "Create Starknet account: {}, chain: {}",
-                    new_args.index, new_args.path
-                );
+                info!("Create Starknet account: {}", new_args.index);
 
                 let client = StarkClient::new(true);
 
