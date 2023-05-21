@@ -10,16 +10,9 @@ pub fn match_create_account_args<'a>(matches: &'a ArgMatches<'a>) -> CreateAccou
 }
 
 pub fn create_account_args() -> Vec<Arg<'static, 'static>> {
-    vec![
-        Arg::with_name("index")
-            .short("i")
-            .long("index")
-            .value_name("Index in derivation path. Default: m/44'/9004'/0'/0/{index}")
-            .required(true),
-        Arg::with_name("path")
-            .short("p")
-            .long("path")
-            .value_name("Derivation path. Default: m/44'/9004'/0'/0/{index}")
-            .required(false),
-    ]
+    vec![Arg::with_name("index")
+        .short("i")
+        .long("index")
+        .value_name("Index in derivation path. Default: m/44'/9004'/0'/0/{index}")
+        .required(true)]
 }

@@ -17,7 +17,7 @@ pub struct EvmClient {
 }
 
 impl EvmClient {
-    pub async fn new(chain: Chain) -> Self {
+    pub async fn new(chain: Chain, index: &str) -> Self {
         dotenv().ok();
         let rpc_url = match chain {
             Chain::Mainnet => match env::var("MAINNET_RPC") {
@@ -46,7 +46,7 @@ impl EvmClient {
 
         let builder = MnemonicBuilder::<English>::default()
             .phrase(phrase)
-            .derivation_path(format!("m/44'/60'/0'/0/{}", 0).as_str())
+            .derivation_path(format!("m/44'/60'/0'/0/{}", index).as_str())
             .unwrap();
 
         let wallet = builder.build().unwrap().with_chain_id(chain);

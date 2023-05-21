@@ -1,3 +1,4 @@
+use ethers::types::Chain;
 use nexus::{
     cmd::{parse_args, starknet::match_create_account_args, swap::match_swap_args},
     constants::{weth_address, INCH_NATIVE_ADDRESS},
@@ -25,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 buy_args.allow_max
             );
 
-            let evmclient = EvmClient::new(buy_args.chain).await;
+            let evmclient = EvmClient::new(buy_args.chain, "0").await;
 
             let from_token = match buy_args.native {
                 true => INCH_NATIVE_ADDRESS,
@@ -55,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 sell_args.allow_max
             );
 
-            let client = EvmClient::new(sell_args.chain).await;
+            let client = EvmClient::new(sell_args.chain, "0").await;
 
             let to_token = match sell_args.native {
                 true => INCH_NATIVE_ADDRESS,
@@ -78,9 +79,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 info!("Create Starknet account: {}", new_args.index);
 
-                let client = StarkClient::new(true);
+                let l1_client = EvmClient::new(Chain::Mainnet, new_args.index).await;
+                let stark_client = StarkClient::new(true);
 
-                client.create_argent_account().await;
+                stark_client.create_argent_account().await;
             }
             _ => {
                 println!("no subcommand provided");
