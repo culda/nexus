@@ -4,6 +4,7 @@ use paris::error;
 
 pub struct SwapArgs<'a> {
     pub token: &'a str,
+    pub decimals: Option<u32>,
     pub chain: Chain,
     pub amount: &'a str,
     pub slippage: f32,
@@ -13,6 +14,12 @@ pub struct SwapArgs<'a> {
 
 pub fn match_swap_args<'a>(matches: &'a ArgMatches<'a>) -> SwapArgs<'a> {
     let token = matches.value_of("token").unwrap();
+    let decimals = matches.value_of("decimals").map(|d| {
+        d.parse::<u32>().unwrap_or_else(|_| {
+            error!("Invalid decimals value");
+            std::process::exit(1);
+        })
+    });
     let chain = matches
         .value_of("chain")
         .unwrap()
@@ -41,12 +48,13 @@ pub fn match_swap_args<'a>(matches: &'a ArgMatches<'a>) -> SwapArgs<'a> {
         .parse::<bool>()
         .unwrap();
     SwapArgs {
-        token: token,
-        chain: chain,
-        amount: amount,
-        slippage: slippage,
-        allow_max: allow_max,
-        native: native,
+        token,
+        decimals,
+        chain,
+        amount,
+        slippage,
+        allow_max,
+        native,
     }
 }
 
@@ -57,6 +65,10 @@ pub fn swap_args() -> Vec<Arg<'static, 'static>> {
             .long("token")
             .value_name("Token contract address")
             .required(true),
+        Arg::with_name("decimals")
+            .short("d")
+            .long("dec")
+            .value_name("Token decimals"),
         Arg::with_name("chain")
             .short("c")
             .long("chain")

@@ -1,25 +1,20 @@
 use std::str::FromStr;
 
 use ethers::{
-    prelude::{
-        k256::{self},
-        SignerMiddleware,
-    },
-    providers::{Http, Provider},
     types::{Address, U256},
-    utils::parse_ether,
+    utils::parse_units,
 };
-use ethers_signers::Wallet;
 use paris::{error, info};
 
 use crate::{
     constants::{INCH_NATIVE_ADDRESS, INCH_ROUTER_ADDRESS},
-    erc20::erc20::ERC20,
+    contract_bindings::erc20::ERC20,
+    evmclient::EvmSigner,
     inch::InchApi,
 };
 
 async fn check_allowance_and_approve(
-    client: &SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+    client: &EvmSigner,
     sender: Address,
     token: Address,
     amount: U256,
@@ -74,15 +69,16 @@ async fn check_allowance_and_approve(
 }
 
 pub async fn swap_tokens(
-    client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+    client: EvmSigner,
     from_token: &str,
+    from_token_decimals: Option<u32>,
     to_token: &str,
     amount: &str,
     slippage: f32,
     allow_max: bool,
 ) {
     let api = InchApi::new(client, slippage);
-    let amount = parse_ether(amount).unwrap();
+    let amount = U256::from(parse_units(amount, from_token_decimals.unwrap_or(16)).unwrap());
     let address = api.client.address();
 
     info!("1Inch API initialized");

@@ -1,11 +1,7 @@
-mod sync_swap_router;
-
 use ethers::{
-    prelude::{abi, k256, Address, Provider, SignerMiddleware},
-    providers::Http,
+    prelude::{abi, Address},
     types::{Bytes, H160, U256},
 };
-use ethers_signers::Wallet;
 use std::{
     str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
@@ -13,11 +9,12 @@ use std::{
 
 use crate::{
     constants::{SYNCSWAP_ROUTER_ADDRESS, USDC_ETH_POOL_ADDRESS, WETH_ETH_ADDRESS},
-    syncswap::sync_swap_router::{SwapPath, SwapStep},
+    contract_bindings::sync_swap_router::{self, SwapPath, SwapStep},
+    evmclient::EvmSigner,
 };
 
 pub async fn swap_eth_for_usdc(
-    client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+    client: EvmSigner,
     amount_out_min: U256,
     amount: U256,
 ) -> Result<(), anyhow::Error> {
