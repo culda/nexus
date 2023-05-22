@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use ethers::{
     abi::ethabi::Bytes,
-    prelude::{k256, signer::SignerMiddlewareError, SignerMiddleware},
+    prelude::{k256, signer::SignerMiddlewareError},
     providers::{Http, Middleware, Provider},
     types::{TransactionRequest, H160, U256},
     utils::{format_units, hex::FromHex},
@@ -18,17 +18,16 @@ use inch_api::{
 };
 use paris::{error, info};
 
+use crate::evmclient::EvmSigner;
+
 pub struct InchApi {
     configuration: Configuration,
     slippage: f32,
-    pub client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+    pub client: EvmSigner,
 }
 
 impl InchApi {
-    pub fn new(
-        client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
-        slippage: f32,
-    ) -> Self {
+    pub fn new(client: EvmSigner, slippage: f32) -> Self {
         let mut configuration = Configuration::new();
         configuration.base_path = "https://api.1inch.io".to_string();
 

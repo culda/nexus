@@ -1,25 +1,20 @@
 use std::str::FromStr;
 
 use ethers::{
-    prelude::{
-        k256::{self},
-        SignerMiddleware,
-    },
-    providers::{Http, Provider},
     types::{Address, U256},
     utils::parse_ether,
 };
-use ethers_signers::Wallet;
 use paris::{error, info};
 
 use crate::{
     constants::{INCH_NATIVE_ADDRESS, INCH_ROUTER_ADDRESS},
     contract_bindings::erc20::ERC20,
+    evmclient::EvmSigner,
     inch::InchApi,
 };
 
 async fn check_allowance_and_approve(
-    client: &SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+    client: &EvmSigner,
     sender: Address,
     token: Address,
     amount: U256,
@@ -74,7 +69,7 @@ async fn check_allowance_and_approve(
 }
 
 pub async fn swap_tokens(
-    client: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+    client: EvmSigner,
     from_token: &str,
     to_token: &str,
     amount: &str,

@@ -12,8 +12,9 @@ use ethers::{
 use ethers_signers::{coins_bip39::English, MnemonicBuilder, Signer, Wallet};
 use paris::error;
 
+pub type EvmSigner = SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>;
 pub struct EvmClient {
-    pub signer: SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>,
+    pub signer: EvmSigner,
 }
 
 impl EvmClient {
