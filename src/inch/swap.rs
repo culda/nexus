@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use ethers::{
     types::{Address, U256},
-    utils::parse_ether,
+    utils::parse_units,
 };
 use paris::{error, info};
 
@@ -71,13 +71,14 @@ async fn check_allowance_and_approve(
 pub async fn swap_tokens(
     client: EvmSigner,
     from_token: &str,
+    from_token_decimals: Option<u32>,
     to_token: &str,
     amount: &str,
     slippage: f32,
     allow_max: bool,
 ) {
     let api = InchApi::new(client, slippage);
-    let amount = parse_ether(amount).unwrap();
+    let amount = U256::from(parse_units(amount, from_token_decimals.unwrap_or(16)).unwrap());
     let address = api.client.address();
 
     info!("1Inch API initialized");

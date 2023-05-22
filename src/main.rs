@@ -31,6 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             swap_tokens(
                 evmclient.signer,
                 from_token,
+                args.decimals,
                 args.token,
                 args.amount,
                 args.slippage,
@@ -56,6 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             swap_tokens(
                 client.signer,
                 args.token,
+                args.decimals,
                 to_token,
                 args.amount,
                 args.slippage,
