@@ -2,7 +2,7 @@ pub mod starkgate;
 
 use bip32::{Mnemonic, XPrv};
 use dotenv::dotenv;
-use ethers::types::U256;
+use ethers::{types::U256, utils::parse_ether};
 use num_bigint::BigUint;
 use paris::info;
 use sha256::digest;
@@ -78,28 +78,44 @@ impl StarkClient {
         }
     }
 
-    pub async fn create_argent_deployment<'f, DepositFn>(&'f mut self, deposit_fn: DepositFn)
-    where
-        DepositFn: FnOnce(U256) -> Pin<Box<dyn Future<Output = ()> + Send + 'f>>,
+    pub async fn create_argent_deployment<'f, DepositFn>(
+        &'f mut self,
+        deposit_amount_eth: &'static str,
+        deposit_fn: DepositFn,
+    ) where
+        DepositFn: FnOnce(U256, U256, U256) -> Pin<Box<dyn Future<Output = ()> + Send + 'f>>,
     {
         let salt = self.signer.get_public_key().await.unwrap().scalar();
         let deployment = AccountDeployment::new(salt, &self.argent_factory);
-
-        let address_str = format!("{:#064x}", deployment.address());
-        info!("Argent address: {}", address_str);
-        let address = U256::from_str(address_str.as_str()).unwrap();
-        deposit_fn(address).await;
-
-        // wait 10 seconds for deposit to be confirmed
-        let ten_seconds = time::Duration::from_millis(10);
-        thread::sleep(ten_seconds);
+        info!("Argent address: {:#064x}", deployment.address());
 
         let est_fee = deployment.estimate_fee().await.unwrap();
         info!("Deployment estimated fee: {}", est_fee.overall_fee);
+
+        // Double the fee to make sure we have enough. Overflow will be deposited into the L2 account
+        let l2_fee: u64 = est_fee.overall_fee * 2;
+        let deposit_amount = U256::from(parse_ether(deposit_amount_eth).unwrap());
+
+        // tx value is the deposit amount + estimated fee
+        let tx_value = deposit_amount + U256::from(l2_fee);
+
+        info!(
+            "Deposit amount: {:?}; Value (incl. L2 fee): {:?}",
+            deposit_amount, tx_value
+        );
+
+        let address = U256::from(deployment.address().to_bytes_be());
+
+        deposit_fn(tx_value, deposit_amount, address).await;
+
+        // wait 10 seconds for deposit tx to be confirmed
+        let ten_seconds = time::Duration::from_secs(10);
+        thread::sleep(ten_seconds);
+
         let result = deployment.send().await;
         match result {
             Ok(tx) => {
-                dbg!(tx);
+                info!("Deployment tx: {:#064x}", tx.transaction_hash);
             }
             Err(err) => {
                 eprintln!("Error: {err}");

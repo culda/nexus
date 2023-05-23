@@ -1,4 +1,4 @@
-use ethers::{types::Chain, utils::parse_ether};
+use ethers::types::Chain;
 use nexus::{
     cmd::{parse_args, starknet::match_create_account_args, swap::match_swap_args},
     constants::{weth_address, INCH_NATIVE_ADDRESS},
@@ -75,8 +75,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 info!("L1 address: {}", l1_client.address());
 
                 let mut stark_client = StarkClient::new(false).await;
-                let deposit_fn = deposit(l1_client.signer, parse_ether("0.01").unwrap());
-                stark_client.create_argent_deployment(deposit_fn).await;
+                let deposit_fn = deposit(l1_client.signer);
+                stark_client
+                    .create_argent_deployment("0.01", deposit_fn)
+                    .await;
             }
             _ => {
                 println!("no subcommand provided");
