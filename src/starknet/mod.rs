@@ -1,6 +1,6 @@
 pub mod starkgate;
 
-use bip32::{Mnemonic, XPrv};
+use bip32::{DerivationPath, Mnemonic, XPrv};
 use dotenv::dotenv;
 use ethers::{types::U256, utils::parse_ether};
 use num_bigint::BigUint;
@@ -27,12 +27,11 @@ const ARGENT_DERIVATION_PATH: &str = "m/44'/9004'/0'/0";
 
 pub struct StarkClient {
     pub signer: LocalWallet,
-    // argent_factory: ArgentAccountFactory<LocalWallet, SequencerGatewayProvider>,
     argent_factory: ArgentAccountFactory<LocalWallet, JsonRpcClient<HttpTransport>>,
 }
 
 impl StarkClient {
-    pub async fn new(test: bool) -> Self {
+    pub async fn new(index: &str, test: bool) -> Self {
         dotenv().ok();
         let chain_id = match test {
             true => TESTNET,
@@ -51,8 +50,12 @@ impl StarkClient {
             XPrv::derive_from_path(&seed, &BASE_DERIVATION_PATH.parse().unwrap()).unwrap();
         let prv_key: [u8; 32] = base_deriv.private_key().to_bytes().into();
 
-        let argent_deriv =
-            XPrv::derive_from_path(&prv_key, &ARGENT_DERIVATION_PATH.parse().unwrap()).unwrap();
+        let argent_deriv = XPrv::derive_from_path(
+            &prv_key,
+            &DerivationPath::from_str(format!("{}/{}", &ARGENT_DERIVATION_PATH, index).as_str())
+                .unwrap(),
+        )
+        .unwrap();
 
         let prv_key: [u8; 32] = argent_deriv.private_key().to_bytes().into();
         let ground = grind_key(&prv_key);
@@ -121,6 +124,12 @@ impl StarkClient {
                 eprintln!("Error: {err}");
             }
         }
+    }
+
+    pub async fn info_account(&self) {
+        let salt = self.signer.get_public_key().await.unwrap().scalar();
+        let deployment = AccountDeployment::new(salt, &self.argent_factory);
+        info!("L2 address: {:#064x}", deployment.address());
     }
 }
 
