@@ -2,13 +2,13 @@ use ethers::types::Chain;
 use nexus::{
     cmd::{
         parse_args,
-        starknet::{match_create_account_args, match_info_account_args},
-        swap::match_swap_args,
+        starknet::{match_create_account_args, match_info_account_args, match_swap_args},
+        swap::match_inch_swap_args,
     },
     constants::{weth_address, INCH_NATIVE_ADDRESS},
     evmclient::EvmClient,
     inch::swap::swap_tokens,
-    starknet::{starkgate::deposit, StarkClient},
+    starknet::{bridge::deposit, swap::JediSwap, StarkClient},
 };
 
 use paris::info;
@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = parse_args();
     match matches.subcommand() {
         ("buy", Some(buy_matches)) => {
-            let args = match_swap_args(buy_matches);
+            let args = match_inch_swap_args(buy_matches);
 
             info!(
                 "Buy token: {}, chain: {}, amount: {}, slippage: {}, native: {}, allowmax: {}",
@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await;
         }
         ("sell", Some(sell_matches)) => {
-            let args = match_swap_args(sell_matches);
+            let args = match_inch_swap_args(sell_matches);
 
             info!(
                 "Sell token: {}, chain: {}, amount: {}, slippage: {}, native: {}, allowmax: {}",
@@ -72,26 +72,46 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("sn", Some(sn_matches)) => match sn_matches.subcommand() {
             ("new", Some(new_matches)) => {
                 let args = match_create_account_args(new_matches);
+                info!("Creating Starknet account ...");
 
                 let l1_client = EvmClient::new(Chain::Mainnet, args.index).await;
-
-                info!("Creating Starknet account ...");
-                info!("L1 address: {}", l1_client.address());
+                l1_client.info_account().await;
 
                 let mut stark_client = StarkClient::new(args.index, false).await;
                 let deposit_fn = deposit(l1_client.signer);
                 stark_client
-                    .create_argent_deployment("0.01", deposit_fn)
+                    .create_argent_deployment(args.deposit, deposit_fn)
                     .await;
             }
             ("info", Some(info_matches)) => {
                 let args = match_info_account_args(info_matches);
 
                 let l1_client = EvmClient::new(Chain::Mainnet, args.index).await;
-                info!("L1 address: {}", l1_client.address());
+                l1_client.info_account().await;
 
                 let stark_client = StarkClient::new(args.index, false).await;
-                stark_client.info_account().await;
+                stark_client.info_account(false).await;
+            }
+            ("swap", Some(swap_matches)) => {
+                let args = match_swap_args(swap_matches);
+                info!("Preparing swap ...");
+
+                let l1_client = EvmClient::new(Chain::Mainnet, args.index).await;
+                l1_client.info_account().await;
+
+                let stark_client = StarkClient::new(args.index, false).await;
+                stark_client.info_account(false).await;
+
+                let swap = JediSwap::new(
+                    &stark_client,
+                    args.from_token,
+                    args.from_token_decimals,
+                    args.to_token,
+                    args.amount,
+                    args.slippage,
+                );
+
+                swap.execute(false).await;
             }
             _ => {
                 println!("no subcommand provided");

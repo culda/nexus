@@ -1,8 +1,8 @@
 use clap::{App, ArgMatches, SubCommand};
 
 use self::{
-    starknet::{create_account_args, info_account_args},
-    swap::swap_args,
+    starknet::{create_account_args, info_account_args, swap_args},
+    swap::inch_swap_args,
 };
 
 pub mod starknet;
@@ -14,12 +14,12 @@ pub fn parse_args() -> ArgMatches<'static> {
         .subcommand(
             SubCommand::with_name("buy")
                 .about("Buy a token")
-                .args(&swap_args()),
+                .args(&inch_swap_args()),
         )
         .subcommand(
             SubCommand::with_name("sell")
                 .about("Sell a token")
-                .args(&swap_args()),
+                .args(&inch_swap_args()),
         )
         .subcommand(
             SubCommand::with_name("sn")
@@ -33,6 +33,11 @@ pub fn parse_args() -> ArgMatches<'static> {
                     SubCommand::with_name("info")
                         .about("Get info about an account")
                         .args(&info_account_args()),
+                )
+                .subcommand(
+                    SubCommand::with_name("swap")
+                        .about("Swap tokens")
+                        .args(&swap_args()),
                 ),
         )
         .get_matches()

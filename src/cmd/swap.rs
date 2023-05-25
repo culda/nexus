@@ -12,7 +12,7 @@ pub struct SwapArgs<'a> {
     pub native: bool,
 }
 
-pub fn match_swap_args<'a>(matches: &'a ArgMatches<'a>) -> SwapArgs<'a> {
+pub fn match_inch_swap_args<'a>(matches: &'a ArgMatches<'a>) -> SwapArgs<'a> {
     let token = matches.value_of("token").unwrap();
     let decimals = matches.value_of("decimals").map(|d| {
         d.parse::<u32>().unwrap_or_else(|_| {
@@ -58,7 +58,7 @@ pub fn match_swap_args<'a>(matches: &'a ArgMatches<'a>) -> SwapArgs<'a> {
     }
 }
 
-pub fn swap_args() -> Vec<Arg<'static, 'static>> {
+pub fn inch_swap_args() -> Vec<Arg<'static, 'static>> {
     vec![
         Arg::with_name("token")
             .short("t")

@@ -6,15 +6,17 @@ use ethers::{
         k256::{self},
         SignerMiddleware,
     },
-    providers::{Http, Provider, ProviderExt},
-    types::Chain,
+    providers::{Http, Middleware, Provider, ProviderExt},
+    types::{Chain, H160},
+    utils::format_units,
 };
 use ethers_signers::{coins_bip39::English, MnemonicBuilder, Signer, Wallet};
-use paris::error;
+use paris::{error, info};
 
 pub type EvmSigner = SignerMiddleware<Provider<Http>, Wallet<k256::ecdsa::SigningKey>>;
 pub struct EvmClient {
     pub signer: EvmSigner,
+    pub provider: Provider<Http>,
 }
 
 impl EvmClient {
@@ -57,7 +59,16 @@ impl EvmClient {
 
         let signer = SignerMiddleware::new(provider.clone(), wallet.clone());
 
-        EvmClient { signer }
+        EvmClient { signer, provider }
+    }
+
+    pub async fn info_account(&self) {
+        let address = H160::from(self.signer.address());
+
+        let balance = self.provider.get_balance(address, None).await.unwrap();
+
+        info!("<yellow>L1</> address: {:#064x}", &address);
+        info!("<yellow>L1</> ETH: {}", format_units(balance, 18).unwrap());
     }
 
     pub fn address(&self) -> String {

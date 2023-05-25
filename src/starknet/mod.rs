@@ -1,23 +1,31 @@
-pub mod starkgate;
+pub mod bridge;
+pub mod constants;
+pub mod swap;
 
 use bip32::{DerivationPath, Mnemonic, XPrv};
 use dotenv::dotenv;
-use ethers::{types::U256, utils::parse_ether};
+use ethers::{
+    types::U256,
+    utils::{format_units, parse_ether},
+};
 use num_bigint::BigUint;
-use paris::info;
+use paris::{error, info};
 use sha256::digest;
 use starknet::{
     accounts::{AccountDeployment, ArgentAccountFactory},
     core::{
         chain_id::{MAINNET, TESTNET},
-        types::FieldElement,
+        types::{BlockId, BlockTag, FieldElement, FunctionCall},
     },
-    providers::{jsonrpc::HttpTransport, JsonRpcClient},
+    macros::selector,
+    providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
     signers::{LocalWallet, Signer, SigningKey},
 };
 use starknet_curve::curve_params::EC_ORDER;
 use std::{future::Future, pin::Pin, str::FromStr, thread, time};
 use url::Url;
+
+use crate::starknet::constants::ETH_STARKNET_ADDRESS;
 
 const ARGENT_PROXY_HASH: &str =
     "0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918";
@@ -28,20 +36,14 @@ const ARGENT_DERIVATION_PATH: &str = "m/44'/9004'/0'/0";
 pub struct StarkClient {
     pub signer: LocalWallet,
     argent_factory: ArgentAccountFactory<LocalWallet, JsonRpcClient<HttpTransport>>,
+    pub address: FieldElement,
 }
 
 impl StarkClient {
     pub async fn new(index: &str, test: bool) -> Self {
         dotenv().ok();
-        let chain_id = match test {
-            true => TESTNET,
-            false => MAINNET,
-        };
-        let rpc_url = match test {
-            true => dotenv!("STARKNET_GOERLI_RPC"),
-            false => dotenv!("STARKNET_MAINNET_RPC"),
-        };
-        let provider = JsonRpcClient::new(HttpTransport::new(Url::parse(rpc_url).unwrap()));
+        let chain_id = chain(test);
+        let provider = provider(test);
 
         let phrase = dotenv!("MNEMONIC");
         let mnemonic = Mnemonic::new(&phrase, Default::default()).unwrap();
@@ -74,30 +76,39 @@ impl StarkClient {
         )
         .await
         .unwrap();
+        let salt = signer.get_public_key().await.unwrap().scalar();
+        let deployment = AccountDeployment::new(salt, &argent_factory);
+        let address = deployment.address();
 
         Self {
             signer,
+            address,
             argent_factory,
         }
     }
 
     pub async fn create_argent_deployment<'f, DepositFn>(
         &'f mut self,
-        deposit_amount_eth: &'static str,
+        deposit_amount_eth: Option<&'f str>,
         deposit_fn: DepositFn,
     ) where
         DepositFn: FnOnce(U256, U256, U256) -> Pin<Box<dyn Future<Output = ()> + Send + 'f>>,
     {
         let salt = self.signer.get_public_key().await.unwrap().scalar();
         let deployment = AccountDeployment::new(salt, &self.argent_factory);
-        info!("Argent address: {:#064x}", deployment.address());
+        let address = deployment.address();
+
+        info!("Argent address: {:#064x}", address);
 
         let est_fee = deployment.estimate_fee().await.unwrap();
         info!("Deployment estimated fee: {}", est_fee.overall_fee);
 
         // Double the fee to make sure we have enough. Overflow will be deposited into the L2 account
         let l2_fee: u64 = est_fee.overall_fee * 2;
-        let deposit_amount = U256::from(parse_ether(deposit_amount_eth).unwrap());
+        let deposit_amount = match deposit_amount_eth {
+            Some(amount) => U256::from(parse_ether(amount).unwrap()),
+            None => U256::one(),
+        };
 
         // tx value is the deposit amount + estimated fee
         let tx_value = deposit_amount + U256::from(l2_fee);
@@ -107,7 +118,7 @@ impl StarkClient {
             deposit_amount, tx_value
         );
 
-        let address = U256::from(deployment.address().to_bytes_be());
+        let address = U256::from(address.to_bytes_be());
 
         deposit_fn(tx_value, deposit_amount, address).await;
 
@@ -115,22 +126,56 @@ impl StarkClient {
         let ten_seconds = time::Duration::from_secs(10);
         thread::sleep(ten_seconds);
 
-        let result = deployment.send().await;
+        let result = deployment.fee_estimate_multiplier(2.0).send().await;
         match result {
             Ok(tx) => {
                 info!("Deployment tx: {:#064x}", tx.transaction_hash);
             }
             Err(err) => {
-                eprintln!("Error: {err}");
+                error!("{err}");
             }
         }
     }
 
-    pub async fn info_account(&self) {
-        let salt = self.signer.get_public_key().await.unwrap().scalar();
-        let deployment = AccountDeployment::new(salt, &self.argent_factory);
-        info!("L2 address: {:#064x}", deployment.address());
+    pub async fn info_account(&self, test: bool) {
+        dotenv().ok();
+        let provider = provider(test);
+
+        info!("<cyan>L2</> address: {:#064x}", self.address);
+
+        let eth_balance = provider
+            .call(
+                FunctionCall {
+                    contract_address: FieldElement::from_str(ETH_STARKNET_ADDRESS).unwrap(),
+                    entry_point_selector: selector!("balanceOf"),
+                    calldata: vec![self.address],
+                },
+                BlockId::Tag(BlockTag::Latest),
+            )
+            .await
+            .expect("failed to call contract");
+
+        info!(
+            "<cyan>L2</> ETH: {}",
+            format_units(U256::from_big_endian(&eth_balance[0].to_bytes_be()), 18).unwrap()
+        );
     }
+}
+
+pub fn chain(test: bool) -> FieldElement {
+    match test {
+        true => TESTNET,
+        false => MAINNET,
+    }
+}
+
+pub fn provider(test: bool) -> JsonRpcClient<HttpTransport> {
+    let rpc_url = match test {
+        true => dotenv!("STARKNET_GOERLI_RPC"),
+        false => dotenv!("STARKNET_MAINNET_RPC"),
+    };
+
+    JsonRpcClient::new(HttpTransport::new(Url::parse(rpc_url).unwrap()))
 }
 
 fn grind_key(key_seed: &[u8; 32]) -> String {
