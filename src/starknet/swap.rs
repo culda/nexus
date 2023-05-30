@@ -70,7 +70,7 @@ impl<'a> JediSwap<'a> {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs()
-            + 300;
+            + 1800;
 
         let result = account
             .execute(vec![
