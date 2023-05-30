@@ -25,7 +25,7 @@ use starknet_curve::curve_params::EC_ORDER;
 use std::{future::Future, pin::Pin, str::FromStr, thread, time};
 use url::Url;
 
-use crate::starknet::constants::ETH_STARKNET_ADDRESS;
+use crate::starknet::constants::ETH_ADDRESS;
 
 const ARGENT_PROXY_HASH: &str =
     "0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918";
@@ -146,7 +146,7 @@ impl StarkClient {
         let eth_balance = provider
             .call(
                 FunctionCall {
-                    contract_address: FieldElement::from_str(ETH_STARKNET_ADDRESS).unwrap(),
+                    contract_address: FieldElement::from_str(ETH_ADDRESS).unwrap(),
                     entry_point_selector: selector!("balanceOf"),
                     calldata: vec![self.address],
                 },

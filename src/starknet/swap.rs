@@ -104,6 +104,6 @@ impl<'a> JediSwap<'a> {
             .await
             .unwrap();
 
-        info!("Approve tx: {:#064x}", result.transaction_hash);
+        info!("<green>Tx</>: {:#064x}", result.transaction_hash);
     }
 }
