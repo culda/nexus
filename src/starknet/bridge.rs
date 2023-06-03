@@ -12,7 +12,7 @@ use crate::{contract_bindings::StarkgetEthBridge, evmclient::EvmSigner};
 const GOERLI_STARKGATE_ADDRESS: &str = "0xde29d060D45901Fb19ED6C6e959EB22d8626708e";
 const MAINNET_STARKGATE_ADDRESS: &str = "0xae0ee0a63a2ce6baeeffe56e7714fb4efe48d419";
 
-pub fn deposit<'a>(
+pub fn deposit_l1_l2<'a>(
     client: EvmSigner,
 ) -> impl FnOnce(U256, U256, U256) -> Pin<Box<dyn Future<Output = ()> + Send + 'a>> + 'a {
     move |tx_value: U256, deposit_amount: U256, l2_recipient: U256| {

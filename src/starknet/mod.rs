@@ -87,13 +87,30 @@ impl StarkClient {
         }
     }
 
-    pub async fn create_argent_deployment<'f, DepositFn>(
-        &'f mut self,
-        deposit_amount_eth: Option<&'f str>,
+    pub async fn deposit_l1_l2<'f, DepositFn>(
+        &'f self,
+        deposit_amount_eth: &'f str,
         deposit_fn: DepositFn,
     ) where
         DepositFn: FnOnce(U256, U256, U256) -> Pin<Box<dyn Future<Output = ()> + Send + 'f>>,
     {
+        let salt = self.signer.get_public_key().await.unwrap().scalar();
+        let deployment = AccountDeployment::new(salt, &self.argent_factory);
+        let address = deployment.address();
+        let est_fee = deployment.estimate_fee().await.unwrap();
+        let l2_fee: u64 = est_fee.overall_fee * 2; // double the fee
+        let deposit_amount = U256::from(parse_ether(deposit_amount_eth).unwrap());
+        let tx_value = deposit_amount + U256::from(l2_fee);
+
+        let address = U256::from(address.to_bytes_be());
+        info!(
+            "Deposit amount: {:?}; Value (incl. L2 fee): {:?}",
+            deposit_amount, tx_value
+        );
+        deposit_fn(tx_value, deposit_amount, address).await;
+    }
+
+    pub async fn create_argent_deployment(&self) {
         let salt = self.signer.get_public_key().await.unwrap().scalar();
         let deployment = AccountDeployment::new(salt, &self.argent_factory);
         let address = deployment.address();
@@ -102,29 +119,6 @@ impl StarkClient {
 
         let est_fee = deployment.estimate_fee().await.unwrap();
         info!("Deployment estimated fee: {}", est_fee.overall_fee);
-
-        // Double the fee to make sure we have enough. Overflow will be deposited into the L2 account
-        let l2_fee: u64 = est_fee.overall_fee * 2;
-        let deposit_amount = match deposit_amount_eth {
-            Some(amount) => U256::from(parse_ether(amount).unwrap()),
-            None => U256::one(),
-        };
-
-        // tx value is the deposit amount + estimated fee
-        let tx_value = deposit_amount + U256::from(l2_fee);
-
-        info!(
-            "Deposit amount: {:?}; Value (incl. L2 fee): {:?}",
-            deposit_amount, tx_value
-        );
-
-        let address = U256::from(address.to_bytes_be());
-
-        deposit_fn(tx_value, deposit_amount, address).await;
-
-        // wait 10 seconds for deposit tx to be confirmed
-        let ten_seconds = time::Duration::from_secs(10);
-        thread::sleep(ten_seconds);
 
         let result = deployment.fee_estimate_multiplier(2.0).send().await;
         match result {

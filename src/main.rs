@@ -2,13 +2,15 @@ use ethers::types::Chain;
 use nexus::{
     cmd::{
         parse_args,
-        starknet::{match_create_account_args, match_info_account_args, match_swap_args},
+        starknet::{
+            match_create_account_args, match_deposit_args, match_info_account_args, match_swap_args,
+        },
         swap::match_inch_swap_args,
     },
     constants::{weth_address, INCH_NATIVE_ADDRESS},
     evmclient::EvmClient,
     inch::swap::swap_tokens,
-    starknet::{bridge::deposit, swap::JediSwap, StarkClient},
+    starknet::{bridge::deposit_l1_l2, swap::JediSwap, StarkClient},
 };
 
 use paris::info;
@@ -77,11 +79,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let l1_client = EvmClient::new(Chain::Mainnet, args.index).await;
                 l1_client.info_account().await;
 
-                let mut stark_client = StarkClient::new(args.index, false).await;
-                let deposit_fn = deposit(l1_client.signer);
-                stark_client
-                    .create_argent_deployment(args.deposit, deposit_fn)
-                    .await;
+                let stark_client = StarkClient::new(args.index, false).await;
+                stark_client.create_argent_deployment().await;
+            }
+            ("deposit", Some(deposit_matches)) => {
+                let args = match_deposit_args(deposit_matches);
+                info!("Bridging to Starknet account ...");
+
+                let l1_client = EvmClient::new(Chain::Mainnet, args.index).await;
+                l1_client.info_account().await;
+
+                let stark_client = StarkClient::new(args.index, false).await;
+                let deposit_fn = deposit_l1_l2(l1_client.signer);
+                stark_client.deposit_l1_l2(args.amount, deposit_fn).await;
             }
             ("info", Some(info_matches)) => {
                 let args = match_info_account_args(info_matches);

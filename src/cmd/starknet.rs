@@ -3,11 +3,15 @@ use paris::error;
 
 pub struct CreateAccountArgs<'a> {
     pub index: &'a str,
-    pub deposit: Option<&'a str>,
 }
 
 pub struct InfoAccountArgs<'a> {
     pub index: &'a str,
+}
+
+pub struct DepositArgs<'a> {
+    pub index: &'a str,
+    pub amount: &'a str,
 }
 pub struct SwapArgs<'a> {
     pub index: &'a str,
@@ -20,8 +24,13 @@ pub struct SwapArgs<'a> {
 
 pub fn match_create_account_args<'a>(matches: &'a ArgMatches<'_>) -> CreateAccountArgs<'a> {
     let index = matches.value_of("index").unwrap();
-    let deposit = matches.value_of("deposit");
-    CreateAccountArgs { index, deposit }
+    CreateAccountArgs { index }
+}
+
+pub fn match_deposit_args<'a>(matches: &'a ArgMatches<'_>) -> DepositArgs<'a> {
+    let index = matches.value_of("index").unwrap();
+    let amount = matches.value_of("amount").unwrap();
+    DepositArgs { index, amount }
 }
 
 pub fn match_info_account_args<'a>(matches: &'a ArgMatches<'_>) -> InfoAccountArgs<'a> {
@@ -60,6 +69,23 @@ pub fn match_swap_args<'a>(matches: &'a ArgMatches<'_>) -> SwapArgs<'a> {
     }
 }
 
+pub fn deposit_from_l1() -> Vec<Arg<'static, 'static>> {
+    vec![
+        Arg::with_name("index")
+            .short("i")
+            .long("index")
+            .value_name("Index in derivation path")
+            .required(true)
+            .help("Index in derivation path. Default: m/44'/9004'/0'/0/{index}"),
+        Arg::with_name("amount")
+            .short("a")
+            .long("amount")
+            .value_name("Amount")
+            .required(true)
+            .help("Amount to deposit"),
+    ]
+}
+
 pub fn create_account_args() -> Vec<Arg<'static, 'static>> {
     vec![
         Arg::with_name("index")
@@ -69,10 +95,14 @@ pub fn create_account_args() -> Vec<Arg<'static, 'static>> {
             .required(true)
             .help("Index in derivation path. Default: m/44'/9004'/0'/0/{index}"),
         Arg::with_name("deposit")
-            .short("dep")
+            .short("d")
             .long("deposit")
             .value_name("Deposit amount")
             .help("Deposit amount. Only deploy fee is deposited by default"),
+        Arg::with_name("no_deposit")
+            .short("nod")
+            .long("no-deposit")
+            .help("Skip the L1->L2 bridge"),
     ]
 }
 
