@@ -69,7 +69,7 @@ pub fn match_swap_args<'a>(matches: &'a ArgMatches<'_>) -> SwapArgs<'a> {
     }
 }
 
-pub fn deposit_from_l1() -> Vec<Arg<'static, 'static>> {
+pub fn deposit_l1_l2_args() -> Vec<Arg<'static, 'static>> {
     vec![
         Arg::with_name("index")
             .short("i")
@@ -107,7 +107,12 @@ pub fn create_account_args() -> Vec<Arg<'static, 'static>> {
 }
 
 pub fn info_account_args() -> Vec<Arg<'static, 'static>> {
-    create_account_args()
+    vec![Arg::with_name("index")
+        .short("i")
+        .long("index")
+        .value_name("Index in derivation path")
+        .required(true)
+        .help("Index in derivation path. Default: m/44'/9004'/0'/0/{index}")]
 }
 
 pub fn swap_args() -> Vec<Arg<'static, 'static>> {

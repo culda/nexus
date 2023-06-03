@@ -40,10 +40,17 @@ pub fn deposit_l1_l2<'a>(
 
             info!("Sending deposit tx ...");
 
-            tx.send().await.unwrap_or_else(|err| {
-                error!("Failed to deposit: {}", err);
-                std::process::exit(1);
-            });
+            let result = tx.send().await;
+
+            match result {
+                Ok(tx) => {
+                    info!("Deposit tx: {:#064x}", tx.tx_hash());
+                }
+                Err(err) => {
+                    error!("Failed to deposit: {}", err);
+                    std::process::exit(1);
+                }
+            }
         }
         .boxed()
     }

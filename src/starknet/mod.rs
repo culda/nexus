@@ -1,6 +1,6 @@
 pub mod bridge;
 pub mod constants;
-pub mod swap;
+pub mod jediswap;
 
 use bip32::{DerivationPath, Mnemonic, XPrv};
 use dotenv::dotenv;
@@ -22,10 +22,12 @@ use starknet::{
     signers::{LocalWallet, Signer, SigningKey},
 };
 use starknet_curve::curve_params::EC_ORDER;
-use std::{future::Future, pin::Pin, str::FromStr, thread, time};
+use std::{future::Future, pin::Pin, str::FromStr};
 use url::Url;
 
-use crate::starknet::constants::ETH_ADDRESS;
+use crate::starknet::constants::{
+    ETH_ADDRESS, ETH_DECIMALS, USDC_ADDRESS, USDC_DECIMALS, WBTC_ADDRESS, WBTC_DECIMALS,
+};
 
 const ARGENT_PROXY_HASH: &str =
     "0x025ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918";
@@ -137,22 +139,42 @@ impl StarkClient {
 
         info!("<cyan>L2</> address: {:#064x}", self.address);
 
-        let eth_balance = provider
-            .call(
-                FunctionCall {
-                    contract_address: FieldElement::from_str(ETH_ADDRESS).unwrap(),
-                    entry_point_selector: selector!("balanceOf"),
-                    calldata: vec![self.address],
-                },
-                BlockId::Tag(BlockTag::Latest),
-            )
-            .await
-            .expect("failed to call contract");
+        let addresses = [
+            (WBTC_ADDRESS, "WBTC", WBTC_DECIMALS),
+            (ETH_ADDRESS, "ETH", ETH_DECIMALS),
+            (USDC_ADDRESS, "USDC", USDC_DECIMALS),
+        ];
 
-        info!(
-            "<cyan>L2</> ETH: {}",
-            format_units(U256::from_big_endian(&eth_balance[0].to_bytes_be()), 18).unwrap()
-        );
+        let mut balances = Vec::new();
+
+        for (address, symbol, decimals) in &addresses {
+            let balance = provider
+                .call(
+                    FunctionCall {
+                        contract_address: FieldElement::from_str(address).unwrap(),
+                        entry_point_selector: selector!("balanceOf"),
+                        calldata: vec![self.address],
+                    },
+                    BlockId::Tag(BlockTag::Latest),
+                )
+                .await
+                .unwrap();
+
+            balances.push((symbol, balance, decimals));
+        }
+
+        info!("<cyan>L2 balances:</>");
+        for (symbol, balance, decimals) in &balances {
+            info!(
+                "<cyan>{}</>: {}",
+                symbol,
+                format_units(
+                    U256::from_big_endian(&balance[0].to_bytes_be()),
+                    **decimals as u32
+                )
+                .unwrap()
+            );
+        }
     }
 }
 

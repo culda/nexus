@@ -1,7 +1,7 @@
 use clap::{App, ArgMatches, SubCommand};
 
 use self::{
-    starknet::{create_account_args, info_account_args, swap_args},
+    starknet::{create_account_args, deposit_l1_l2_args, info_account_args, swap_args},
     swap::inch_swap_args,
 };
 
@@ -24,6 +24,11 @@ pub fn parse_args() -> ArgMatches<'static> {
         .subcommand(
             SubCommand::with_name("sn")
                 .about("Starknet operations")
+                .subcommand(
+                    SubCommand::with_name("deposit")
+                        .about("Deposit to a Starknet account")
+                        .args(&deposit_l1_l2_args()),
+                )
                 .subcommand(
                     SubCommand::with_name("new")
                         .about("Create a new Starknet account")

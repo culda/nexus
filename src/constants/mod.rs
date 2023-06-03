@@ -33,6 +33,13 @@ pub const USDC_ETH_POOL_DECIMALS: u32 = 18;
 
 pub const ERA_NAME_SERVICE_ADDRESS: &str = "0x935442AF47F3dc1c11F006D551E13769F12eab13";
 
+pub const STARK_WBTC_ADDRESS: &str =
+    "0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac";
+pub const STARK_ETH_ADDRESS: &str =
+    "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+pub const STARK_USDC_ADDRESS: &str =
+    "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8";
+
 pub fn weth_address(chain: Chain) -> &'static str {
     match chain {
         Chain::Mainnet => WETH_ETH_ADDRESS,

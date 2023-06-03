@@ -10,7 +10,7 @@ use nexus::{
     constants::{weth_address, INCH_NATIVE_ADDRESS},
     evmclient::EvmClient,
     inch::swap::swap_tokens,
-    starknet::{bridge::deposit_l1_l2, swap::JediSwap, StarkClient},
+    starknet::{bridge::deposit_l1_l2, jediswap::JediSwap, StarkClient},
 };
 
 use paris::info;
